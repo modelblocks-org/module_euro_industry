@@ -1,494 +1,113 @@
-# A minimal example of how to configure this module
-dummy_text: This is a user input.
-
-ammonia: True
-
+# Countries included in the historical calibration.
 countries:
-- AL
-- AT
-- BA
-- BE
-- BG
-- CH
-- CZ
-- DE
-- DK
-- EE
-- ES
-- FI
-- FR
-- GB
-- GR
-- HR
-- HU
-- IE
-- IT
-- LT
-- LU
-- LV
-- ME
-- MK
-- NL
-- 'NO'
-- PL
-- PT
-- RO
-- RS
-- SE
-- SI
-- SK
-- XK
-industry:
-  # St_primary_fraction:
-  #   2020: 0.6
-  #   2025: 0.55
-  #   2030: 0.5
-  #   2035: 0.45
-  #   2040: 0.4
-  #   2045: 0.35
-  #   2050: 0.3
-  # DRI_fraction:
-  #   2020: 0
-  #   2025: 0
-  #   2030: 0.05
-  #   2035: 0.2
-  #   2040: 0.4
-  #   2045: 0.7
-  #   2050: 1
-  # H2_DRI: 1.7
-  # elec_DRI: 0.322
-  # Al_primary_fraction:
-  #   2020: 0.4
-  #   2025: 0.375
-  #   2030: 0.35
-  #   2035: 0.325
-  #   2040: 0.3
-  #   2045: 0.25
-    # 2050: 0.2
+  - AL
+  - AT
+  - BA
+  - BE
+  - BG
+  - CH
+  - CZ
+  - DE
+  - DK
+  - EE
+  - ES
+  - FI
+  - FR
+  - GB
+  - GR
+  - HR
+  - HU
+  - IE
+  - IT
+  - LT
+  - LU
+  - LV
+  - ME
+  - MK
+  - NL
+  - 'NO'
+  - PL
+  - PT
+  - RO
+  - RS
+  - SE
+  - SI
+  - SK
+  - XK
+
+historical_calibration:
+  reference_year: 2019
+
+  # JRC-IDEES does not provide the chemical subsector disaggregation required
+  # by the model. Ammonia is taken from USGS. HVC, chlorine and methanol are
+  # allocated across countries using each country's residual non-ammonia
+  # basic-chemicals production, preserving the calibration of the old model.
+  # Note: this is a calibration convention, not a physical mass balance,
+  # because JRC reports basic chemicals in ethylene-equivalent output.
+  basic_chemicals_without_NH3_production_today: 69.0  # Mt/a
+  HVC_production_today: 52.0                           # Mt/a
+  chlorine_production_today: 9.58                     # Mt/a
+  methanol_production_today: 1.5                      # Mt/a
+
+  # Historical chemical energy-demand reconstruction.
   MWh_NH3_per_tNH3: 5.166
-  MWh_CH4_per_tNH3_SMR: 10.8
-  MWh_elec_per_tNH3_SMR: 0.7
   MWh_H2_per_tNH3_electrolysis: 5.93
   MWh_elec_per_tNH3_electrolysis: 0.2473
-  MWh_NH3_per_MWh_H2_cracker: 1.46 # https://github.com/euronion/trace/blob/44a5ff8401762edbef80eff9cfe5a47c8d3c8be4/data/efficiencies.csv
-  NH3_process_emissions: 24.5
-  petrochemical_process_emissions: 25.5
-  #HVC primary/recycling based on values used in Neumann et al https://doi.org/10.1016/j.joule.2023.06.016, linearly interpolated between 2020 and 2050
-  #2020 recycling rates based on Agora https://static.agora-energiewende.de/fileadmin/Projekte/2021/2021_02_EU_CEAP/A-EW_254_Mobilising-circular-economy_study_WEB.pdf
-  #fractions refer to the total primary HVC production in 2020
-  #assumes 6.7 Mtplastics produced from recycling in 2020
-  HVC_primary_fraction:
-    2020: 0.88
-    2025: 0.85
-    2030: 0.78
-    2035: 0.7
-    2040: 0.6
-    2045: 0.5
-    2050: 0.4
-  HVC_mechanical_recycling_fraction:
-    2020: 0.12
-    2025: 0.15
-    2030: 0.18
-    2035: 0.21
-    2040: 0.24
-    2045: 0.27
-    2050: 0.30
-  HVC_chemical_recycling_fraction:
-    2020: 0.0
-    2025: 0.0
-    2030: 0.04
-    2035: 0.08
-    2040: 0.12
-    2045: 0.16
-    2050: 0.20
-  HVC_environment_sequestration_fraction: 0.
-  waste_to_energy: false
-  waste_to_energy_cc: false
-  sector_ratios_fraction_future:
-    2020: 0.0
-    2025: 0.05
-    2030: 0.2
-    2035: 0.45
-    2040: 0.7
-    2045: 0.85
-    2050: 1.0
-  basic_chemicals_without_NH3_production_today: 69. #Mt/a, = 86 Mtethylene-equiv - 17 MtNH3
-  HVC_production_today: 52.
-  MWh_elec_per_tHVC_mechanical_recycling: 0.547
-  MWh_elec_per_tHVC_chemical_recycling: 6.9
-  chlorine_production_today: 9.58
   MWh_elec_per_tCl: 3.6
   MWh_H2_per_tCl: -0.9372
-  methanol_production_today: 1.5
   MWh_elec_per_tMeOH: 0.167
   MWh_CH4_per_tMeOH: 10.25
-  MWh_MeOH_per_tMeOH: 5.528
-  hotmaps_locate_missing: false
-  reference_year: 2019
-  oil_refining_emissions: 0.013
 
+  # Keep the legacy convention in which ammonia demand is represented as an
+  # ammonia carrier. Set false only if the historical baseline should instead
+  # expose the reconstructed hydrogen/electricity inputs.
+  ammonia: true
+
+  # Share of coke-oven transformation output attributed to integrated
+  # steelworks (BF-BOF) in the historical calibration.
+  coke_oven_allocation: 0.75
+
+# defining the scenarios
+technologies_file: config/technologies.yaml
+scenario_file: config/scenarios/retain_max_electrification.yaml
+
+spatial_disaggregation:
+  regions_file: resources/user/regions.geojson
+  region_id_column: name
+  country_column: country
+
+  # Optional subset of years to regionalize. Set to null to keep all years.
+  years:
+    - 2030
+    - 2040
+    - 2050
+
+  # The primary key is always sector-specific Hotmaps data when available.
+  # If it is unavailable, the options below are tried in this order.
+  fallback_options:
+    - generic_industry
+    - population
+    - user_key
+    - uniform
+
+  # Generic industrial fallback based on all Hotmaps industrial sites in the
+  # same country. No additional configuration is required.
+
+  # Optional population-based regional key. The weights do not need to sum to
+  # one; they are renormalized to the regions present in the GeoJSON.
+  population:
+    file: resources/user/pop_layout_base_s_60.csv
+    region_column: name
+    country_column: ct
+    weight_column: fraction
+
+  # Optional arbitrary user-provided regional distribution key. Set file: null
+  # when it is not used. It follows the same three-column concept as population.
+  user_key:
+    file: null
+    # file: resources/user/my_regional_key.csv
+    region_column: region
+    country_column: country
+    weight_column: share
+    source_name: user_key
 
-projections:
-  2050:
-    default: 1
-    production_level: "resources/user/projections_2050.csv" # user specific inputs
-    shares:
-      high_value_chemicals:
-        # base_route: 0
-        primary_route: 0.6
-        mechanical_recycling: 0.2
-        chemical_recycling: 0.2
-        methanol_to_olefins: 0.0
-
-      iron_and_steel:
-        integrated_steelworks: 0.0
-        electric_arc: 0.6
-        H2_DRI-EAF: 0.4
-        NG_DRI-EAF: 0.0
-        H2_NG_DRI-EAF: 0.0
-
-      aluminium:
-        primary_production: 0.6
-        secondary_production: 0.4
-
-      cement:
-        primary_route: 0.5
-        CEM2-BMW: 0.5
-
-      ceramics:
-        primary_route: 1
-
-      glass:
-        primary_route: 1
-
-      food_beverages_tobacco:
-        primary_route: 1
-
-      transport_equipment:
-        primary_route: 1
-
-      machinery_equipment:
-        primary_route: 1
-
-      textiles_and_leather:
-        primary_route: 1
-
-      wood_and_wood_products:
-        primary_route: 1
-
-      other_industrial_sectors:
-        primary_route: 1
-
-      pulp_production:
-        primary_route: 1
-
-      paper_production:
-        primary_route: 1
-
-      printing_and_media_reproduction:
-        primary_route: 1
-
-      pharmaceutical_products:
-        primary_route: 1
-
-      alumina_production:
-        primary_route: 1
-
-      chlorine:
-        primary_route: 1
-
-      ammonia:
-        primary_route: 1
-
-      methanol:
-        primary_route: 1
-
-      other_chemicals:
-        primary_route: 1
-
-      other_non_ferrous_metals:
-        primary_route: 1
-
-
-
-
-
-
-
-# retrofiting the pypsa workflow on industry demand projections
-
-sectors:
-
-# Chemical Industry
-  high_value_chemicals:
-    production_routes:
-      primary_route:
-        ratios: "JRC-IDEES"
-
-      mechanical_recycling:
-        ratios: #MWh/tMaterial
-          elec: 0.547 
-
-      chemical_recycling:
-        ratios: #MWh/tMaterial
-          elec: 6.9 
-
-      methanol_to_olefins:
-        ratios: #MWh/tMaterial
-          elec: 6.9 
-          methanol: 5.528 
-
-
-  iron_and_steel:
-    # primary routes as exist in JRC-IDEES are: Integrated Steelworks, Electric Arc 
-    # for these primary routes, the sector coefficients are calcuated in the workflow. Addditional routes are provided here
-    production_routes:
-      integrated_steelworks:
-
-        ratios: "JRC-IDEES"
-        
-
-      electric_arc:
-        ratios: "JRC-IDEES"
-
-      H2_DRI-EAF:
-        ratios: #MWh/tMaterial
-          elec: 2.06 # GJ/t
-          hydrogen: 11.4 # GJ/t
-          process emission: 0.193 #tCO2/t
-
-
-
-      NG_DRI-EAF:
-        ratios: #MWh/tMaterial
-          elec: 2.06 # GJ/t
-          methane: 7.45 # GJ/t
-          coal: 0.4
-          process emission: 0.651 #tCO2/t
-
-
-      H2_NG_DRI-EAF:
-        ratios: #MWh/tMaterial
-          elec: 2.06 # GJ/t
-          methane: 4.99 # GJ/t
-          coal: 0.4
-          process emission: 0.651 #tCO2/t
-
-
-  aluminium:
-    production_routes:
-      primary_production:
-        ratios: "JRC-IDEES"
-
-      secondary_production:
-        ratios: "JRC-IDEES"
-
-  cement:
-    production_routes:
-      primary_route:
-        ratios: "JRC-IDEES"
-
-      CEM2-BMW:
-        ratios: #MWh/tMaterial
-          elec: 0.29 # GJ/t
-          biomass: 2.77 # GJ/t
-          process emission: 0.193 #tCO2/t
-
-  ceramics:
-    production_routes:
-      primary_route:
-        ratios: "JRC-IDEES"
-
-  glass:
-    production_routes:
-      primary_route:
-        ratios: "JRC-IDEES"
-
-  food_beverages_tobacco:
-    steam_processing:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1
-
-          efficiency: 1
-
-  transport_equipment:
-    steam_processing:
-      technology:
-        mid-enthalpy-heat: # option if you would like to allow the model to choose
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 0.0
-          efficiency: 1
-
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 0.0
-          efficiency: 1
-
-        elec:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 1
-
-  machinery_equipment:
-    steam_processing:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.32
-
-  textiles_and_leather:
-    steam_processing:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.32
-
-  wood_and_wood_products:
-    steam_processing:
-      technology:
-        mid-enthalpy-heat: # option if you would like to allow the model to choose
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 0.0
-          efficiency: 1
-
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.32
-
-        elec:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 0.0
-          efficiency: 1
-
-
-  other_industrial_sectors:
-    steam_processing:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.32
-
-
-  pulp_paper_printing:
-  # pulp production
-    pulping:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-
-          efficiency: 0.32
-
-  # paper production
-    paper_machine_steam_use:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-
-          efficiency: 0.32
-
-    paper_finishing_steam_use:
-      technology:
-        biomass:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.32
-
-  non_ferrous_metals:
-    alumina_high_enthalpy_heat:
-      technology:
-        methane:
-          shares: # % of the primary production
-            2020: 0.0
-            2025: 0.0
-            2030: 0.0
-            2035: 0.0
-            2040: 0.0
-            2045: 0.0
-            2050: 1.0
-          efficiency: 0.42

@@ -1,0 +1,65 @@
+visualization:
+  # null means aggregate over all modelled countries.
+  countries: null
+
+  # null means include all commodities in the overview plots.
+  commodities: null
+
+  # Existing non-spatial Plotly figures. Switch individual plot types on/off.
+  production:
+    make_overview: true
+    make_route_plots: true
+
+  energy:
+    make_carrier_plot: false
+    make_commodity_plot: false
+    energy_layer: FEC
+    use_type: final_energy
+
+  output_dir: results/plots
+
+  # PyDeck maps based on regionalised outputs.
+  spatial_maps:
+    enabled: true
+
+    # null means use spatial_disaggregation.years from config/config.yaml.
+    years: null
+
+    output_dir: results/maps
+
+    # Remove HTML maps created by earlier runs before writing the selected maps.
+    clean_output_dir: true
+
+    # Select exactly which map types are generated.
+    plots:
+      # Choropleth map for every selected commodity/year.
+      production_maps: false
+
+      # One regional pie map per year.
+      # Pie size = total regional energy demand; slices = sectors.
+      energy_by_sector_pies: true
+
+      # Optional alternative pie maps.
+      energy_by_commodity_pies: false
+      energy_by_carrier_pies: true
+
+    # null means make production maps for every commodity.
+    production_commodities: null
+
+    # Avoid adding FEC and UED together in the same energy map.
+    energy_layer: FEC
+
+    # Add feedstock here too if desired, e.g. [final_energy, feedstock].
+    use_types:
+      - final_energy
+
+    # Keep regional pie charts readable. Categories beyond this limit
+    # are grouped into OTHER.
+    max_pie_slices: 10
+
+    # Pie radius in geographic kilometres. Because the pies are rendered as
+    # map polygons rather than screen icons, they grow naturally when zooming in.
+    # Largest pie radius in map degrees.
+    # Radius scales with sqrt(regional demand / largest regional demand).
+    # Example: 0.45 is roughly 50 km north-south in Europe.
+    pie_radius_factor: 1

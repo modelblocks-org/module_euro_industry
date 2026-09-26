@@ -1,0 +1,58 @@
+# Reusable industrial technology definitions.
+#
+# This file defines WHAT technologies and new production routes are.
+# Deployment assumptions (where, when, and how much) belong in the scenario file.
+#
+# Existing-process replacement technologies use efficiency + carrier shares.
+# New-route processes use specific energy intensities in MWh/t product.
+
+processes:
+  industrial_heat_pump:
+    efficiency: 3.0
+    carriers:
+      ELEC:
+        share: 1.0
+  electric_boiler:
+    efficiency: 0.98
+    carriers:
+      ELEC:
+        share: 1.0
+  electric_process_heat:
+    efficiency: 0.95
+    carriers:
+      ELEC:
+        share: 1.0
+  electric_dryer:
+    efficiency: 0.95
+    carriers:
+      ELEC:
+        share: 1.0
+  electric_furnace:
+    efficiency: 0.95
+    carriers:
+      ELEC:
+        share: 1.0
+  hydrogen_dri:
+    intensities:
+      HYDROGEN: 1.8
+      ELEC: 0.1
+  new_eaf:
+    intensities:
+      ELEC: 0.65
+  electric_hvc_conversion:
+    intensities:
+      ELEC: 2.0
+production_routes:
+  H2_DRI_EAF:
+    commodity: STEEL
+    processes:
+    - hydrogen_dri
+    - new_eaf
+  ELECTRIC_HVC:
+    commodity: HVC
+    inherit_use_types_from:
+      production_route: BASE_ROUTE
+      use_types:
+      - feedstock
+    processes:
+    - electric_hvc_conversion

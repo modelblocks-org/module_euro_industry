@@ -1,0 +1,215 @@
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+from typing import Iterable
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import yaml
+
+
+def _load_cfg(path: str | Path) -> dict:
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f).get("visualization", {})
+
+
+def _filter_scope(df: pd.DataFrame, countries, commodities) -> pd.DataFrame:
+    out = df.copy()
+    if countries:
+        out = out[out["country"].isin(countries)]
+    if commodities and "commodity" in out.columns:
+        out = out[out["commodity"].isin(commodities)]
+    return out
+
+
+def _write_html(fig, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.write_html(path, include_plotlyjs="cdn", full_html=True)
+
+
+def plot_production_overview(projected: pd.DataFrame, output_dir: Path) -> None:
+    if projected.empty:
+        return
+
+    grouped = (
+        projected.groupby(["commodity", "year"], as_index=False)["production"]
+        .sum()
+        .sort_values(["commodity", "year"])
+    )
+
+    ref = (
+        grouped.sort_values("year")
+        .groupby("commodity", as_index=False)
+        .first()[["commodity", "production"]]
+        .rename(columns={"production": "reference_production"})
+    )
+    grouped = grouped.merge(ref, on="commodity", how="left")
+    grouped = grouped[grouped["reference_production"] > 0].copy()
+    grouped["production_index"] = (
+        100.0 * grouped["production"] / grouped["reference_production"]
+    )
+
+    fig = px.line(
+        grouped,
+        x="year",
+        y="production_index",
+        color="commodity",
+        markers=False,
+        labels={
+            "year": "Year",
+            "production_index": "Production index (reference year = 100)",
+            "commodity": "Commodity",
+        },
+        title="Industrial production projections",
+    )
+    fig.add_hline(y=100, line_dash="dot")
+    fig.update_layout(hovermode="x unified")
+    _write_html(fig, output_dir / "production_overview.html")
+
+
+def plot_route_production(routes: pd.DataFrame, output_dir: Path) -> None:
+    if routes.empty:
+        return
+
+    route_counts = (
+        routes[routes["route_share"] > 0]
+        .groupby("commodity")["production_route"]
+        .nunique()
+    )
+    commodities = route_counts[route_counts > 1].index
+
+    for commodity in commodities:
+        data = routes[routes["commodity"] == commodity].copy()
+        data = (
+            data.groupby(["year", "production_route"], as_index=False)["route_production"]
+            .sum()
+            .sort_values("year")
+        )
+
+        fig = px.area(
+            data,
+            x="year",
+            y="route_production",
+            color="production_route",
+            labels={
+                "year": "Year",
+                "route_production": "Production",
+                "production_route": "Production route",
+            },
+            title=f"{commodity} production by route",
+        )
+        fig.update_layout(hovermode="x unified")
+        _write_html(fig, output_dir / f"production_routes_{commodity}.html")
+
+
+def _filter_energy(demand: pd.DataFrame, energy_cfg: dict) -> pd.DataFrame:
+    out = demand.copy()
+    layer = energy_cfg.get("energy_layer", "FEC")
+    use_type = energy_cfg.get("use_type", "final_energy")
+
+    if layer:
+        out = out[out["energy_layer"].eq(layer)]
+    if use_type:
+        out = out[out["use_type"].eq(use_type)]
+    return out
+
+
+def plot_energy_by_carrier(demand: pd.DataFrame, output_dir: Path, energy_cfg: dict) -> None:
+    data = _filter_energy(demand, energy_cfg)
+    if data.empty:
+        return
+
+    data = (
+        data.groupby(["year", "carrier"], as_index=False)["demand"]
+        .sum()
+        .sort_values("year")
+    )
+
+    fig = px.area(
+        data,
+        x="year",
+        y="demand",
+        color="carrier",
+        labels={"year": "Year", "demand": "Energy demand", "carrier": "Carrier"},
+        title=f"Industrial energy demand by carrier ({energy_cfg.get('energy_layer', 'FEC')})",
+    )
+    fig.update_layout(hovermode="x unified")
+    _write_html(fig, output_dir / "energy_demand_by_carrier.html")
+
+
+def plot_energy_by_commodity(demand: pd.DataFrame, output_dir: Path, energy_cfg: dict) -> None:
+    data = _filter_energy(demand, energy_cfg)
+    if data.empty:
+        return
+
+    data = (
+        data.groupby(["year", "commodity"], as_index=False)["demand"]
+        .sum()
+        .sort_values("year")
+    )
+
+    fig = px.line(
+        data,
+        x="year",
+        y="demand",
+        color="commodity",
+        labels={"year": "Year", "demand": "Energy demand", "commodity": "Commodity"},
+        title=f"Industrial energy demand by commodity ({energy_cfg.get('energy_layer', 'FEC')})",
+    )
+    fig.update_layout(hovermode="x unified")
+    _write_html(fig, output_dir / "energy_demand_by_commodity.html")
+
+
+def _clean_standard_outputs(output_dir: Path) -> None:
+    """Remove only files generated by this script so disabled plots disappear."""
+    fixed = [
+        output_dir / "production_overview.html",
+        output_dir / "energy_demand_by_carrier.html",
+        output_dir / "energy_demand_by_commodity.html",
+    ]
+    for path in fixed:
+        if path.exists():
+            path.unlink()
+    for path in output_dir.glob("production_routes_*.html"):
+        path.unlink()
+
+
+def main(args) -> None:
+    cfg = _load_cfg(args.visualization_config)
+    output_dir = Path(cfg.get("output_dir", "results/plots"))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _clean_standard_outputs(output_dir)
+
+    countries = cfg.get("countries")
+    commodities = cfg.get("commodities")
+
+    projected = _filter_scope(pd.read_csv(args.projected_production), countries, commodities)
+    routes = _filter_scope(pd.read_csv(args.route_production), countries, commodities)
+    demand = _filter_scope(pd.read_csv(args.energy_demand), countries, commodities)
+
+    production_cfg = cfg.get("production", {})
+    energy_cfg = cfg.get("energy", {})
+
+    if production_cfg.get("make_overview", True):
+        plot_production_overview(projected, output_dir)
+    if production_cfg.get("make_route_plots", True):
+        plot_route_production(routes, output_dir)
+    if energy_cfg.get("make_carrier_plot", True):
+        plot_energy_by_carrier(demand, output_dir, energy_cfg)
+    if energy_cfg.get("make_commodity_plot", True):
+        plot_energy_by_commodity(demand, output_dir, energy_cfg)
+
+    marker = output_dir / ".plots_complete"
+    marker.touch()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--projected-production", required=True)
+    parser.add_argument("--route-production", required=True)
+    parser.add_argument("--energy-demand", required=True)
+    parser.add_argument("--visualization-config", required=True)
+    args = parser.parse_args()
+    main(args)

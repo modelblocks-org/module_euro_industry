@@ -1,0 +1,125 @@
+# Retain & Electrify Europe
+#
+# This file defines WHERE, WHEN, and HOW MUCH technologies/routes are deployed.
+# It contains all scenario assumptions: production projection, process
+# transformations, and production-route shares.
+
+name: retain_max_electrification
+description: Europe retains reference-year industrial production and maximizes technically
+  plausible direct electrification.
+production_projection:
+  generic:
+    2030: 1.0
+    2040: 1.0
+    2050: 1.0
+  file: null
+process_transformations:
+- commodity: '*'
+  production_route: '*'
+  process: LOW_ENTHALPY_HEAT
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.4
+      2040: 0.1
+      2050: 0.0
+    industrial_heat_pump:
+      2030: 0.6
+      2040: 0.9
+      2050: 1.0
+- commodity: '*'
+  production_route: '*'
+  process: DRYING
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.5
+      2040: 0.15
+      2050: 0.0
+    electric_dryer:
+      2030: 0.5
+      2040: 0.85
+      2050: 1.0
+- commodity: '*'
+  production_route: '*'
+  processes:
+  - STEAM_PROCESS
+  - PROCESS_STEAM
+  - STEAM
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.6
+      2040: 0.25
+      2050: 0.05
+    electric_boiler:
+      2030: 0.4
+      2040: 0.75
+      2050: 0.95
+- commodity: '*'
+  production_route: '*'
+  processes:
+  - FURNACE
+  - FURNACES
+  - KILN
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.8
+      2040: 0.4
+      2050: 0.1
+    electric_furnace:
+      2030: 0.2
+      2040: 0.6
+      2050: 0.9
+- commodity: PAPER
+  production_route: BASE_ROUTE
+  process: PAPER_MACHINE
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.7
+      2040: 0.3
+      2050: 0.05
+    electric_process_heat:
+      2030: 0.3
+      2040: 0.7
+      2050: 0.95
+- commodity: PAPER
+  production_route: BASE_ROUTE
+  processes:
+  - PREPARATION
+  - FINISHING
+  use_type: final_energy
+  technologies:
+    HISTORICAL:
+      2030: 0.7
+      2040: 0.3
+      2050: 0.05
+    electric_process_heat:
+      2030: 0.3
+      2040: 0.7
+      2050: 0.95
+route_shares:
+  STEEL:
+    BF_BOF:
+      2030: 0.55
+      2040: 0.2
+      2050: 0.0
+    EAF:
+      2030: 0.35
+      2040: 0.4
+      2050: 0.45
+    H2_DRI_EAF:
+      2030: 0.1
+      2040: 0.4
+      2050: 0.55
+  HVC:
+    BASE_ROUTE:
+      2030: 0.8
+      2040: 0.4
+      2050: 0.0
+    ELECTRIC_HVC:
+      2030: 0.2
+      2040: 0.6
+      2050: 1.0

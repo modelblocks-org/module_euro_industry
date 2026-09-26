@@ -1,117 +1,91 @@
+"""Prepare the historical/current industrial calibration data."""
+
+
+rule prepare_all:
+    input:
+        "results/historical/production.csv",
+        "results/historical/production_aggregated.csv",
+        "results/historical/energy_demand.csv",
+    output:
+        touch("results/historical/.prepare_complete")
+
 
 rule prepare_ammonia_production:
+    message:
+        "Prepare historical ammonia production from USGS."
     input:
-        usgs=rules.download_ammonia_usgs.output.file,
+        usgs="resources/automatic/ammonia/usgs.xlsx"
     output:
-        prepared="resources/automatic/prepare/ammonia_production.csv",
+        "resources/automatic/prepare/ammonia_production.csv"
     log:
         "logs/prepare/prepare_ammonia_production.log"
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_ammonia_production.py"
+    shell:
+        'python workflow/scripts/prepare_ammonia_production.py '
+        '--input "{input.usgs}" '
+        '--output "{output}" '
+        '> "{log}" 2>&1'
 
 
 rule prepare_coke_transformation:
     message:
-        "Preparing coke transformation data."
-    params:
-        countries=config["countries"],
+        "Prepare historical coke-oven transformation output from Eurostat."
     input:
-        eurostat_dir="resources/automatic/eurostat",
+        eurostat_dir="resources/automatic/eurostat"
     output:
-        coke="resources/automatic/prepare/coke_transformation.csv"
+        "resources/automatic/prepare/coke_transformation.csv"
+    params:
+        countries=" ".join(config["countries"])
     log:
         "logs/prepare/prepare_coke_transformation.log"
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_coke_transformation.py"
+    shell:
+        'python workflow/scripts/prepare_coke_transformation.py '
+        '--eurostat-dir "{input.eurostat_dir}" '
+        '--countries {params.countries} '
+        '--output "{output}" '
+        '> "{log}" 2>&1'
 
 
-rule prepare_current_aggregated_production:
-    params:
-        industry=config["industry"],
-        countries=config["countries"],
+rule prepare_current_production:
+    message:
+        "Prepare route-preserving historical industrial production."
     input:
-        ch_industrial_production=rules.download_CHE_industry.output.file,
-        ammonia_production=rules.prepare_ammonia_production.output.prepared,
-        jrc_dir="resources/automatic/jrc_idees/",
-        eurostat_dir="resources/automatic/eurostat/",
+        jrc_dir="resources/automatic/jrc_idees",
+        eurostat_dir="resources/automatic/eurostat",
+        ch_industrial_production="resources/automatic/CHE_industry.csv",
+        ammonia_production=rules.prepare_ammonia_production.output,
     output:
-        production_per_country="results/aggregated/current_production.csv",
-        aggregated_production_per_country = "results/aggregated/current_aggregated_production.csv"
+        production="results/historical/production.csv",
+        aggregated="results/historical/production_aggregated.csv",
     log:
-        "logs/prepare/current_aggregated_production.log",
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_current_aggregated_production.py"
+        "logs/prepare/prepare_current_production.log"
+    shell:
+        'python workflow/scripts/prepare_current_production.py '
+        '--config "config/config.yaml" '
+        '--jrc-dir "{input.jrc_dir}" '
+        '--eurostat-dir "{input.eurostat_dir}" '
+        '--ch-industrial-production "{input.ch_industrial_production}" '
+        '--ammonia-production "{input.ammonia_production}" '
+        '--output "{output.production}" '
+        '--aggregated-output "{output.aggregated}" '
+        '> "{log}" 2>&1'
 
 
-rule prepare_future_aggregated_production:
-    params:
-        industry=config["projections"],
+rule prepare_current_energy_demand:
+    message:
+        "Prepare route/activity-preserving historical industrial energy demand."
     input:
-        current=rules.prepare_current_aggregated_production.output.aggregated_production_per_country,
+        jrc_dir="resources/automatic/jrc_idees",
+        production=rules.prepare_current_production.output.production,
+        coke=rules.prepare_coke_transformation.output,
     output:
-        future="results/aggregated/future_production_{year}.csv",
+        "results/historical/energy_demand.csv"
     log:
-        "logs/prepare/future_aggregated_production_{year}.log",
-    conda:
-        "../envs/prepare.yaml",
-    script:
-        "../scripts/prepare_future_aggregated_production.py"
-
-
-rule prepare_current_energy_demand_per_country:
-    params:
-        countries=config["countries"],
-        industry=config["industry"],
-        ammonia=config["ammonia"],
-    input:
-        transformation_output_coke=rules.prepare_coke_transformation.output.coke,
-        jrc="resources/automatic/jrc_idees",
-        industrial_production_per_country=rules.prepare_current_aggregated_production.output.production_per_country,
-    output:
-        current_energy_demand="results/aggregated/current_industrial_energy_demand_per_country.csv"
-    log:
-        "logs/prepare/prepare_current_industrial_energy_demand_per_country.log"
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_current_energy_demand_per_country.py"
-
-
-rule prepare_sector_ratios:
-    params:
-        industry=config["industry"],
-        ammonia=config["ammonia"],
-    input:
-        ammonia_production=rules.prepare_ammonia_production.output.prepared,
-        idees="resources/automatic/jrc_idees",
-    output:
-        industry_sector_ratios="resources/automatic/prepare/sector_ratios.csv",
-    log:
-        "logs/prepare/prepare_sector_ratios.log",
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_sector_ratios.py"
-
-
-rule prepare_sector_ratios_intermediate:
-    params:
-        industry=config["industry"],
-    input:
-        industry_sector_ratios=rules.prepare_sector_ratios.output.industry_sector_ratios,
-        industrial_energy_demand_per_country_today=rules.prepare_current_energy_demand_per_country.output.current_energy_demand,
-        industrial_production_per_country=rules.prepare_future_aggregated_production.output.future,
-    output:
-        industry_sector_ratios="resources/automatic/prepare/sector_ratios_intermediate_{year}.csv",
-    log:
-         "logs/prepare/prepare_sector_ratios_intermediate_{year}.log"
-    conda:
-        "../envs/prepare.yaml"
-    script:
-        "../scripts/prepare_sector_ratios_intermediate.py"
+        "logs/prepare/prepare_current_energy_demand.log"
+    shell:
+        'python workflow/scripts/prepare_current_energy_demand.py '
+        '--config "config/config.yaml" '
+        '--jrc-dir "{input.jrc_dir}" '
+        '--production "{input.production}" '
+        '--coke "{input.coke}" '
+        '--output "{output}" '
+        '> "{log}" 2>&1'
