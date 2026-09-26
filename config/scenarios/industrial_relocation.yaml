@@ -1,0 +1,45 @@
+name: industrial_relocation
+
+description: >
+  Industrial relocation stress-test scenario. European iron and steel and
+  selected chemical commodities decline to 50% of reference-year production
+  by 2050. Other industrial commodities retain reference-year production.
+
+production_projection:
+  generic:
+    2030: 1.0
+    2040: 1.0
+    2050: 1.0
+
+  commodities:
+    STEEL:
+      2030: 0.90
+      2040: 0.70
+      2050: 0.50
+
+    HVC:
+      2030: 0.90
+      2040: 0.70
+      2050: 0.50
+
+    AMMONIA:
+      2030: 0.90
+      2040: 0.70
+      2050: 0.50
+
+    METHANOL:
+      2030: 0.90
+      2040: 0.70
+      2050: 0.50
+
+    CHLORINE:
+      2030: 0.90
+      2040: 0.70
+      2050: 0.50
+
+  # Optional country/commodity CSV overrides can still be used.
+  # They take precedence over the commodity curves above.
+  file: null
+
+process_transformations: []
+route_shares: {}

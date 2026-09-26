@@ -7,8 +7,11 @@ transformation stage.
 Projection factors are relative to reference-year production:
     future production = reference production * projection factor
 
-A generic projection curve applies to every country/commodity. An optional CSV
-can override selected anchor years for selected country/commodity combinations.
+Projection precedence is:
+    generic YAML curve
+        -> commodity-specific YAML anchors
+        -> optional CSV country/commodity anchors
+
 Annual factors between anchor years are linearly interpolated.
 """
 
@@ -37,22 +40,82 @@ def load_config(path: str | Path) -> dict:
         return yaml.safe_load(handle)
 
 
+def _validate_anchor(year, value, reference_year: int, label: str) -> tuple[int, float]:
+    year = int(year)
+    value = float(value)
+
+    if year <= reference_year:
+        raise ValueError(
+            f"{label} projection year {year} must be later than reference year {reference_year}."
+        )
+    if not np.isfinite(value) or value < 0:
+        raise ValueError(
+            f"{label} projection factor for {year} must be a finite non-negative number."
+        )
+    return year, value
+
+
 def _normalise_generic(generic: dict, reference_year: int) -> dict[int, float]:
     if not generic:
-        raise ValueError("production_projection.generic must contain at least one future anchor year.")
+        raise ValueError(
+            "production_projection.generic must contain at least one future anchor year."
+        )
 
     anchors = {reference_year: 1.0}
     for year, value in generic.items():
-        year = int(year)
-        value = float(value)
-        if year <= reference_year:
-            raise ValueError(
-                f"Generic projection year {year} must be later than reference year {reference_year}."
-            )
-        if not np.isfinite(value) or value < 0:
-            raise ValueError(f"Projection factor for {year} must be a finite non-negative number.")
+        year, value = _validate_anchor(year, value, reference_year, "Generic")
         anchors[year] = value
+
     return dict(sorted(anchors.items()))
+
+
+def _normalise_commodity_curves(
+    commodities: dict | None,
+    reference_year: int,
+) -> dict[str, dict[int, float]]:
+    """Validate commodity-specific YAML projection anchors.
+
+    Expected structure::
+
+        commodities:
+          STEEL:
+            2030: 0.9
+            2050: 0.5
+          HVC:
+            2050: 0.5
+
+    The reference-year factor is not specified here; it is always 1.0 and comes
+    from the historical baseline.
+    """
+    if not commodities:
+        return {}
+    if not isinstance(commodities, dict):
+        raise ValueError("production_projection.commodities must be a mapping.")
+
+    result: dict[str, dict[int, float]] = {}
+
+    for commodity, curve in commodities.items():
+        commodity = str(commodity).strip()
+        if not commodity:
+            raise ValueError("Commodity names in production_projection.commodities cannot be empty.")
+        if not isinstance(curve, dict) or not curve:
+            raise ValueError(
+                f"Commodity projection for {commodity} must contain at least one year/value anchor."
+            )
+
+        anchors: dict[int, float] = {}
+        for year, value in curve.items():
+            year, value = _validate_anchor(
+                year,
+                value,
+                reference_year,
+                f"Commodity {commodity}",
+            )
+            anchors[year] = value
+
+        result[commodity] = dict(sorted(anchors.items()))
+
+    return result
 
 
 def load_overrides(path: str | Path | None, reference_year: int) -> pd.DataFrame:
@@ -100,11 +163,23 @@ def load_overrides(path: str | Path | None, reference_year: int) -> pd.DataFrame
 def _interpolate_curve(
     reference_year: int,
     generic_anchors: dict[int, float],
+    commodity_anchors: dict[int, float] | None,
     override_anchors: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Build one annual curve, with CSV anchors overriding generic anchors."""
+    """Build one annual projection curve using the configured precedence.
+
+    Precedence at an anchor year:
+        CSV country/commodity > YAML commodity > YAML generic.
+    """
     anchors = dict(generic_anchors)
-    source_at_anchor = {year: ("historical" if year == reference_year else "generic") for year in anchors}
+    source_at_anchor = {
+        year: ("historical" if year == reference_year else "generic")
+        for year in anchors
+    }
+
+    for year, value in (commodity_anchors or {}).items():
+        anchors[int(year)] = float(value)
+        source_at_anchor[int(year)] = "commodity"
 
     for row in override_anchors.itertuples(index=False):
         anchors[int(row.year)] = float(row.value)
@@ -115,6 +190,8 @@ def _interpolate_curve(
     anchor_years = np.array(list(anchors), dtype=int)
     anchor_values = np.array(list(anchors.values()), dtype=float)
     factors = np.interp(years, anchor_years, anchor_values)
+
+    precedence = {"historical": 0, "generic": 1, "commodity": 2, "csv": 3}
 
     rows = []
     for year, factor in zip(years, factors):
@@ -127,10 +204,15 @@ def _interpolate_curve(
             right_i = left_i + 1
             left_source = source_at_anchor[int(anchor_years[left_i])]
             right_source = source_at_anchor[int(anchor_years[right_i])]
-            source = "interpolated_csv" if "csv" in {left_source, right_source} else "interpolated_generic"
+            strongest = max((left_source, right_source), key=lambda s: precedence[s])
+            source = f"interpolated_{strongest}"
+
         rows.append((int(year), float(factor), source))
 
-    return pd.DataFrame(rows, columns=["year", "projection_factor", "projection_source"])
+    return pd.DataFrame(
+        rows,
+        columns=["year", "projection_factor", "projection_source"],
+    )
 
 
 def project_production(
@@ -158,9 +240,32 @@ def project_production(
             f"No aggregated historical production rows found for reference year {reference_year}."
         )
 
-    reference["production"] = pd.to_numeric(reference["production"], errors="raise").astype(float)
-    generic = _normalise_generic(projection_cfg.get("generic", {}), reference_year)
-    overrides = load_overrides(projection_cfg.get("file"), reference_year)
+    reference["country"] = reference["country"].astype(str).str.strip()
+    reference["commodity"] = reference["commodity"].astype(str).str.strip()
+    reference["production"] = pd.to_numeric(
+        reference["production"], errors="raise"
+    ).astype(float)
+
+    generic = _normalise_generic(
+        projection_cfg.get("generic", {}),
+        reference_year,
+    )
+    commodity_curves = _normalise_commodity_curves(
+        projection_cfg.get("commodities"),
+        reference_year,
+    )
+    overrides = load_overrides(
+        projection_cfg.get("file"),
+        reference_year,
+    )
+
+    known_commodities = set(reference["commodity"])
+    unknown_commodities = sorted(set(commodity_curves) - known_commodities)
+    if unknown_commodities:
+        raise ValueError(
+            "production_projection.commodities contains commodities not present in "
+            f"historical aggregated production: {', '.join(unknown_commodities)}"
+        )
 
     known_pairs = set(zip(reference["country"], reference["commodity"]))
     if not overrides.empty:
@@ -179,10 +284,18 @@ def project_production(
     for row in reference.itertuples(index=False):
         country = str(row.country)
         commodity = str(row.commodity)
+
         group_overrides = overrides.loc[
-            (overrides["country"] == country) & (overrides["commodity"] == commodity)
+            (overrides["country"] == country)
+            & (overrides["commodity"] == commodity)
         ]
-        curve = _interpolate_curve(reference_year, generic, group_overrides)
+
+        curve = _interpolate_curve(
+            reference_year=reference_year,
+            generic_anchors=generic,
+            commodity_anchors=commodity_curves.get(commodity),
+            override_anchors=group_overrides,
+        )
 
         base_production = float(row.production)
         curve["production"] = base_production * curve["projection_factor"]
@@ -228,4 +341,9 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
-    project_production(args.reference_production, args.config, args.scenario, args.output)
+    project_production(
+        args.reference_production,
+        args.config,
+        args.scenario,
+        args.output,
+    )
