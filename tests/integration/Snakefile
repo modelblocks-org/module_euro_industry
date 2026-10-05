@@ -4,10 +4,10 @@ configfile: workflow.source_path("./test_config.yaml")
 
 # Emulate how another workflow might create inputs for this module.
 rule create_external_input:
-    message:
-        "Example of a rule external to your module."
     output:
         text_file="results/integration_test/resources/user/user_message.md",
+    message:
+        "Example of a rule external to your module."
     run:
         from pathlib import Path
         from textwrap import dedent
@@ -40,8 +40,8 @@ use rule * from module_euro_industry as module_euro_industry_*
 
 # Request something from the module
 rule all:
-    message:
-        "A generic test case for your module."
     default_target: True
     input:
         "results/integration_test/results/combined_text.md",
+    message:
+        "A generic test case for your module."

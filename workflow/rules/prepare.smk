@@ -2,8 +2,6 @@
 
 
 rule prepare_population:
-    message:
-        "{wildcards.shape}: preparing population raster."
     input:
         raster=rules.unzip_GHSL.output[0],
         like_vector="resources/user/{shape}/shapes.parquet",
@@ -11,13 +9,13 @@ rule prepare_population:
         path="resources/automatic/shapes/{shape}/population.tif",
     log:
         "logs/{shape}/prepare_population.log",
+    message:
+        "{wildcards.shape}: preparing population raster."
     wrapper:
         "v7.9.0/geo/rasterio/clip"
 
 
 rule prepare_shapes:
-    message:
-        "{wildcards.shape}: preparing polygons for European industry disaggregation."
     input:
         shapes="resources/user/{shape}/shapes.parquet",
         population=rules.prepare_population.output.path,
@@ -27,13 +25,13 @@ rule prepare_shapes:
         "logs/{shape}/prepare_shapes.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "{wildcards.shape}: preparing polygons for European industry disaggregation."
     script:
         "../scripts/prepare_shapes.py"
 
 
 rule prepare_ammonia_production:
-    message:
-        "Preparing Global ammonia production statistics."
     input:
         usgs=rules.download_ammonia_usgs.output.file,
     output:
@@ -42,13 +40,13 @@ rule prepare_ammonia_production:
         "logs/prepare/prepare_ammonia_production.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "Preparing Global ammonia production statistics."
     script:
         "../scripts/prepare_ammonia_production.py"
 
 
 rule prepare_coke_transformation:
-    message:
-        "Preparing coke transformation data."
     input:
         eurostat_dir="resources/automatic/eurostat",
     output:
@@ -57,15 +55,13 @@ rule prepare_coke_transformation:
         "logs/prepare/prepare_coke_transformation.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "Preparing coke transformation data."
     script:
         "../scripts/prepare_coke_transformation.py"
 
 
 rule prepare_current_europe_production:
-    message:
-        "Preparing current European production."
-    params:
-        industry=config["industry"],
     input:
         ch_industrial_production=rules.download_CHE_industry.output.file,
         ammonia_production=rules.prepare_ammonia_production.output.production,
@@ -77,15 +73,15 @@ rule prepare_current_europe_production:
         "logs/prepare/prepare_current_europe_production.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        industry=config["industry"],
+    message:
+        "Preparing current European production."
     script:
         "../scripts/prepare_current_europe_production.py"
 
 
 rule prepare_future_europe_production:
-    message:
-        "{wildcards.year}: preparing future European production."
-    params:
-        industry=config["industry"],
     input:
         current=rules.prepare_current_europe_production.output.production,
     output:
@@ -94,16 +90,15 @@ rule prepare_future_europe_production:
         "logs/{year}/prepare_future_europe_production.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        industry=config["industry"],
+    message:
+        "{wildcards.year}: preparing future European production."
     script:
         "../scripts/prepare_future_europe_production.py"
 
 
 rule prepare_current_europe_energy_demand:
-    message:
-        "Preparing current energy demand for European nations."
-    params:
-        industry=config["industry"],
-        ammonia=config["ammonia"],
     input:
         transformation_output_coke=rules.prepare_coke_transformation.output.coke,
         jrc="resources/automatic/jrc_idees",
@@ -114,17 +109,17 @@ rule prepare_current_europe_energy_demand:
         "logs/prepare/prepare_current_europe_energy_demand.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        industry=config["industry"],
+        ammonia=config["ammonia"],
+    message:
+        "Preparing current energy demand for European nations."
     script:
         "../scripts/prepare_current_europe_energy_demand.py"
 
 
 # TODO: rename to rates mentioning it's 'best in class rates' or something like that?
 rule prepare_sector_ratios:
-    message:
-        "Preparing average energy demand rates per industrial subsector."
-    params:
-        industry=config["industry"],
-        ammonia=config["ammonia"],
     input:
         ammonia_production=rules.prepare_ammonia_production.output.production,
         idees="resources/automatic/jrc_idees",
@@ -134,15 +129,16 @@ rule prepare_sector_ratios:
         "logs/prepare/prepare_sector_ratios.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        industry=config["industry"],
+        ammonia=config["ammonia"],
+    message:
+        "Preparing average energy demand rates per industrial subsector."
     script:
         "../scripts/prepare_sector_ratios.py"
 
 
 rule prepare_future_europe_sector_rates:
-    message:
-        "Preparing future rates by interpolating between current and future best-in-class consumption."
-    params:
-        industry=config["industry"],
     input:
         sector_rates=rules.prepare_sector_ratios.output.industry_sector_ratios,
         current_european_demand=rules.prepare_current_europe_energy_demand.output.energy_demand,
@@ -153,5 +149,9 @@ rule prepare_future_europe_sector_rates:
         "logs/{year}/prepare_future_europe_sector_rates.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        industry=config["industry"],
+    message:
+        "Preparing future rates by interpolating between current and future best-in-class consumption."
     script:
         "../scripts/prepare_future_europe_sector_rates.py"

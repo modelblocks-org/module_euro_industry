@@ -2,11 +2,6 @@
 
 
 rule disaggregate_production_rates:
-    message:
-        "{wildcards.shape}: estimating production rates per shape using proxies."
-    params:
-        hotmaps_locate_missing=config["industry"]["hotmaps_locate_missing"],
-        geographic_crs=internal["crs"]["geographic"],
     input:
         shapes=rules.prepare_shapes.output.shapes,
         hotmaps=rules.download_hotmaps.output.file,
@@ -20,13 +15,16 @@ rule disaggregate_production_rates:
         "logs/{shape}/disaggregate_production_rates.log",
     conda:
         "../envs/industry.yaml"
+    params:
+        hotmaps_locate_missing=config["industry"]["hotmaps_locate_missing"],
+        geographic_crs=internal["crs"]["geographic"],
+    message:
+        "{wildcards.shape}: estimating production rates per shape using proxies."
     script:
         "../scripts/disaggregate_production_rates.py"
 
 
 rule disaggregate_current_energy_demand:
-    message:
-        "{wildcards.shape}: disaggregating current energy demand."
     input:
         shapes=rules.prepare_shapes.output.shapes,
         production_rates=rules.disaggregate_production_rates.output.production_rates,
@@ -37,13 +35,13 @@ rule disaggregate_current_energy_demand:
         "logs/{shape}/disaggregate_current_energy_demand.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "{wildcards.shape}: disaggregating current energy demand."
     script:
         "../scripts/disaggregate_current_energy_demand.py"
 
 
 rule disaggregate_future_production:
-    message:
-        "{wildcards.shape}/{wildcards.year}: disaggregating future production."
     input:
         shapes=rules.prepare_shapes.output.shapes,
         production_rates=rules.disaggregate_production_rates.output.production_rates,
@@ -54,13 +52,13 @@ rule disaggregate_future_production:
         "logs/{shape}/{year}/disaggregate_future_production.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "{wildcards.shape}/{wildcards.year}: disaggregating future production."
     script:
         "../scripts/disaggregate_future_production.py"
 
 
 rule disaggregate_future_energy_demand:
-    message:
-        "{wildcards.shape}/{wildcards.year}: disaggregating energy demand."
     input:
         shapes=rules.prepare_shapes.output.shapes,
         sector_rates=rules.prepare_future_europe_sector_rates.output.sector_rates,
@@ -72,5 +70,7 @@ rule disaggregate_future_energy_demand:
         "logs/{shape}/{year}/disaggregate_future_energy_demand.log",
     conda:
         "../envs/industry.yaml"
+    message:
+        "{wildcards.shape}/{wildcards.year}: disaggregating energy demand."
     script:
         "../scripts/disaggregate_future_energy_demand.py"
