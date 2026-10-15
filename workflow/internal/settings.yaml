@@ -13,4 +13,3 @@ resources:
     non_eu:
       cement: "https://raw.githubusercontent.com/PyPSA/pypsa-eur/refs/heads/master/data/cement-plants-noneu.csv"
       refineries:   "https://raw.githubusercontent.com/PyPSA/pypsa-eur/master/data/refineries-noneu.csv"
-

@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Iterable
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import yaml
 
 
 def _load_cfg(path: str | Path) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f).get("visualization", {})
 
 
@@ -83,7 +81,9 @@ def plot_route_production(routes: pd.DataFrame, output_dir: Path) -> None:
     for commodity in commodities:
         data = routes[routes["commodity"] == commodity].copy()
         data = (
-            data.groupby(["year", "production_route"], as_index=False)["route_production"]
+            data.groupby(["year", "production_route"], as_index=False)[
+                "route_production"
+            ]
             .sum()
             .sort_values("year")
         )
@@ -116,7 +116,9 @@ def _filter_energy(demand: pd.DataFrame, energy_cfg: dict) -> pd.DataFrame:
     return out
 
 
-def plot_energy_by_carrier(demand: pd.DataFrame, output_dir: Path, energy_cfg: dict) -> None:
+def plot_energy_by_carrier(
+    demand: pd.DataFrame, output_dir: Path, energy_cfg: dict
+) -> None:
     data = _filter_energy(demand, energy_cfg)
     if data.empty:
         return
@@ -139,7 +141,9 @@ def plot_energy_by_carrier(demand: pd.DataFrame, output_dir: Path, energy_cfg: d
     _write_html(fig, output_dir / "energy_demand_by_carrier.html")
 
 
-def plot_energy_by_commodity(demand: pd.DataFrame, output_dir: Path, energy_cfg: dict) -> None:
+def plot_energy_by_commodity(
+    demand: pd.DataFrame, output_dir: Path, energy_cfg: dict
+) -> None:
     data = _filter_energy(demand, energy_cfg)
     if data.empty:
         return
@@ -185,7 +189,9 @@ def main(args) -> None:
     countries = cfg.get("countries")
     commodities = cfg.get("commodities")
 
-    projected = _filter_scope(pd.read_csv(args.projected_production), countries, commodities)
+    projected = _filter_scope(
+        pd.read_csv(args.projected_production), countries, commodities
+    )
     routes = _filter_scope(pd.read_csv(args.route_production), countries, commodities)
     demand = _filter_scope(pd.read_csv(args.energy_demand), countries, commodities)
 

@@ -1,13 +1,24 @@
 # Changes here will be overwritten by Copier
-# DO NOT MANUALLY MODIFY THIS FILE
-_commit: latest
+# !!!!! DO NOT MANUALLY MODIFY THIS FILE !!!!!
+_commit: v1.0.3
 _src_path: https://github.com/calliope-project/data-module-template.git
-author_email: mohammadamin.tahavori@vito.be
-author_family_name: Tahavori
-author_given_name: Mohammad Amin
-github_org: calliope-project
+authors:
+-   email: mohammadamin.tahavori@vito.be
+    family_name: Tahavori
+    given_name: Mohammad Amin
+-   email: i.ruizmanuel@tudelft.nl
+    family_name: Ruiz Manuel
+    given_name: Ivan
+github_org: modelblocks-org
 license: Apache-2.0
+maintainers:
+-   email: mohammadamin.tahavori@vito.be
+    family_name: Tahavori
+    given_name: Mohammad Amin
+-   email: i.ruizmanuel@tudelft.nl
+    family_name: Ruiz Manuel
+    given_name: Ivan
+module_code_name: module_euro_industry
 module_description: A module to create disaggregated energy demand of European industries
     at any resolution.
-module_long_name: Module Europe Industry
-module_short_name: module_euro_industry
+module_human_name: European industry demand

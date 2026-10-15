@@ -16,18 +16,14 @@ def download(url: str, output: str | Path, timeout: int = 120) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     request = urllib.request.Request(
-        url,
-        headers={"User-Agent": "industry-data-download/0.1"},
+        url, headers={"User-Agent": "industry-data-download/0.1"}
     )
 
     tmp_path: Path | None = None
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             with tempfile.NamedTemporaryFile(
-                mode="wb",
-                delete=False,
-                dir=output.parent,
-                prefix=f".{output.name}.",
+                mode="wb", delete=False, dir=output.parent, prefix=f".{output.name}."
             ) as tmp:
                 shutil.copyfileobj(response, tmp)
                 tmp_path = Path(tmp.name)
@@ -36,7 +32,12 @@ def download(url: str, output: str | Path, timeout: int = 120) -> None:
             raise RuntimeError(f"Downloaded file is empty: {url}")
 
         tmp_path.replace(output)
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        TimeoutError,
+        OSError,
+    ) as exc:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise RuntimeError(f"Failed to download {url}: {exc}") from exc

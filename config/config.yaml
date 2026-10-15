@@ -110,4 +110,3 @@ spatial_disaggregation:
     country_column: country
     weight_column: share
     source_name: user_key
-

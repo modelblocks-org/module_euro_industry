@@ -15,9 +15,11 @@ rule transform_industrial_demand:
         demand="results/demand/industrial_energy_demand.csv",
         route_production="results/demand/route_production.csv",
     log:
-        "logs/demand/transform_industrial_demand.log"
+        "logs/demand/transform_industrial_demand.log",
+    conda:
+        "../envs/module.yaml"
     shell:
-        'python workflow/scripts/transform_industrial_demand.py '
+        "python workflow/scripts/transform_industrial_demand.py "
         '--projected-production "{input.projected_production}" '
         '--historical-production "{input.historical_production}" '
         '--historical-energy "{input.historical_energy}" '
@@ -31,6 +33,8 @@ rule transform_industrial_demand:
 
 rule demand_all:
     input:
-        rules.transform_industrial_demand.output
+        rules.transform_industrial_demand.output,
     output:
-        touch("results/demand/.demand_complete")
+        touch("results/demand/.demand_complete"),
+    conda:
+        "../envs/module.yaml"
