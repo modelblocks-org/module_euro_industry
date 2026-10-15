@@ -9,6 +9,8 @@ rule project_production:
         "results/projections/production.csv"
     log:
         "logs/projections/project_production.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         (
             'python workflow/scripts/project_production.py '
@@ -25,3 +27,5 @@ rule projections_all:
         rules.project_production.output
     output:
         touch("results/projections/.projections_complete")
+    conda:
+        "../envs/module.yaml"

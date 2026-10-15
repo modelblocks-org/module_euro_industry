@@ -7,7 +7,9 @@ rule prepare_all:
         "results/historical/production_aggregated.csv",
         "results/historical/energy_demand.csv",
     output:
-        touch("results/historical/.prepare_complete")
+        touch("results/historical/.prepare_complete"),
+    conda:
+        "../envs/module.yaml",
 
 
 rule prepare_ammonia_production:
@@ -19,6 +21,8 @@ rule prepare_ammonia_production:
         "resources/automatic/prepare/ammonia_production.csv"
     log:
         "logs/prepare/prepare_ammonia_production.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/prepare_ammonia_production.py '
         '--input "{input.usgs}" '
@@ -37,6 +41,8 @@ rule prepare_coke_transformation:
         countries=" ".join(config["countries"])
     log:
         "logs/prepare/prepare_coke_transformation.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/prepare_coke_transformation.py '
         '--eurostat-dir "{input.eurostat_dir}" '
@@ -58,6 +64,8 @@ rule prepare_current_production:
         aggregated="results/historical/production_aggregated.csv",
     log:
         "logs/prepare/prepare_current_production.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/prepare_current_production.py '
         '--config "config/config.yaml" '
@@ -81,6 +89,8 @@ rule prepare_current_energy_demand:
         "results/historical/energy_demand.csv"
     log:
         "logs/prepare/prepare_current_energy_demand.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/prepare_current_energy_demand.py '
         '--config "config/config.yaml" '

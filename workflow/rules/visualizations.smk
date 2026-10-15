@@ -32,6 +32,8 @@ rule plot_results:
         touch(f"{plots_output_dir}/.plots_complete")
     log:
         "logs/plots/plot_results.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/plot_results.py '
         '--projected-production "{input.projected_production}" '
@@ -54,6 +56,8 @@ rule plot_spatial_maps:
         "logs/plots/plot_spatial_maps.log"
     params:
         output_dir=maps_output_dir
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/plot_spatial_maps.py '
         '--regions "{input.regions}" '
@@ -69,3 +73,5 @@ rule plots_all:
     input:
         rules.plot_results.output,
         rules.plot_spatial_maps.output,
+    conda:
+        "../envs/module.yaml"

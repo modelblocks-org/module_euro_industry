@@ -17,6 +17,8 @@ rule download_all:
         "resources/automatic/jrc_idees",
     output:
         touch("resources/automatic/.downloads_complete")
+    conda:
+        "../envs/module.yaml"
 
 
 rule download_eurostat:
@@ -28,6 +30,8 @@ rule download_eurostat:
         url=internal["resources"]["automatic"]["eurostat"]
     log:
         "logs/automatic/download_eurostat.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -41,6 +45,8 @@ rule download_jrc_idees:
         url=internal["resources"]["automatic"]["jrc_idees"]
     log:
         "logs/automatic/download_jrc_idees.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -54,6 +60,8 @@ rule download_hotmaps:
         url=internal["resources"]["automatic"]["hotmaps"]
     log:
         "logs/automatic/download_hotmaps.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -67,6 +75,8 @@ rule download_ammonia_usgs:
         url=internal["resources"]["automatic"]["ammonia"]["usgs"]
     log:
         "logs/automatic/download_ammonia_usgs.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -80,6 +90,8 @@ rule download_ammonia_plants:
         url=internal["resources"]["automatic"]["ammonia"]["plants"]
     log:
         "logs/automatic/download_ammonia_plants.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -93,6 +105,8 @@ rule download_GEM_SPT:
         url=internal["resources"]["automatic"]["GEM_SPT"]
     log:
         "logs/automatic/download_GEM_SPT.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -106,6 +120,8 @@ rule download_cement_non_eu:
         url=internal["resources"]["automatic"]["non_eu"]["cement"]
     log:
         "logs/automatic/download_cement_non_eu.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -119,6 +135,8 @@ rule download_refineries_non_eu:
         url=internal["resources"]["automatic"]["non_eu"]["refineries"]
     log:
         "logs/automatic/download_refineries_non_eu.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -132,6 +150,8 @@ rule download_CHE_industry:
         url=internal["resources"]["automatic"]["CHE_industry"]
     log:
         "logs/automatic/download_CHE_industry.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
@@ -145,6 +165,8 @@ rule unzip_eurostat:
         directory("resources/automatic/eurostat")
     log:
         "logs/automatic/unzip_eurostat.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'
 
@@ -158,5 +180,7 @@ rule unzip_jrc_idees:
         directory("resources/automatic/jrc_idees")
     log:
         "logs/automatic/unzip_jrc_idees.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'

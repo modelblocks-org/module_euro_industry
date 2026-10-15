@@ -26,6 +26,8 @@ rule build_industrial_distribution_keys:
     params:
         population_arg=population_arg,
         user_key_arg=user_key_arg,
+    conda:
+        "../envs/module.yaml"
     shell:
         (
             'python workflow/scripts/build_spatial_distribution_keys.py '
@@ -48,6 +50,8 @@ rule disaggregate_industrial_energy_demand:
         "results/spatial/industrial_energy_demand.csv"
     log:
         "logs/spatial/disaggregate_industrial_energy_demand.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         (
             'python workflow/scripts/disaggregate_industrial_data.py '
@@ -69,6 +73,8 @@ rule disaggregate_route_production:
         "results/spatial/route_production.csv"
     log:
         "logs/spatial/disaggregate_route_production.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         (
             'python workflow/scripts/disaggregate_industrial_data.py '
@@ -87,3 +93,5 @@ rule spatial_all:
         rules.disaggregate_route_production.output,
     output:
         touch("results/spatial/.spatial_complete")
+    conda:
+        "../envs/module.yaml"

@@ -16,6 +16,8 @@ rule transform_industrial_demand:
         route_production="results/demand/route_production.csv",
     log:
         "logs/demand/transform_industrial_demand.log"
+    conda:
+        "../envs/module.yaml"
     shell:
         'python workflow/scripts/transform_industrial_demand.py '
         '--projected-production "{input.projected_production}" '
@@ -34,3 +36,5 @@ rule demand_all:
         rules.transform_industrial_demand.output
     output:
         touch("results/demand/.demand_complete")
+    conda:
+        "../envs/module.yaml"
