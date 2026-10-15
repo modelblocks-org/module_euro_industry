@@ -24,14 +24,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-
-REQUIRED_REFERENCE_COLUMNS = {
-    "country",
-    "commodity",
-    "year",
-    "production",
-    "unit",
-}
+REQUIRED_REFERENCE_COLUMNS = {"country", "commodity", "year", "production", "unit"}
 REQUIRED_OVERRIDE_COLUMNS = {"country", "commodity", "year", "value"}
 
 
@@ -70,8 +63,7 @@ def _normalise_generic(generic: dict, reference_year: int) -> dict[int, float]:
 
 
 def _normalise_commodity_curves(
-    commodities: dict | None,
-    reference_year: int,
+    commodities: dict | None, reference_year: int
 ) -> dict[str, dict[int, float]]:
     """Validate commodity-specific YAML projection anchors.
 
@@ -97,7 +89,9 @@ def _normalise_commodity_curves(
     for commodity, curve in commodities.items():
         commodity = str(commodity).strip()
         if not commodity:
-            raise ValueError("Commodity names in production_projection.commodities cannot be empty.")
+            raise ValueError(
+                "Commodity names in production_projection.commodities cannot be empty."
+            )
         if not isinstance(curve, dict) or not curve:
             raise ValueError(
                 f"Commodity projection for {commodity} must contain at least one year/value anchor."
@@ -106,10 +100,7 @@ def _normalise_commodity_curves(
         anchors: dict[int, float] = {}
         for year, value in curve.items():
             year, value = _validate_anchor(
-                year,
-                value,
-                reference_year,
-                f"Commodity {commodity}",
+                year, value, reference_year, f"Commodity {commodity}"
             )
             anchors[year] = value
 
@@ -210,8 +201,7 @@ def _interpolate_curve(
         rows.append((int(year), float(factor), source))
 
     return pd.DataFrame(
-        rows,
-        columns=["year", "projection_factor", "projection_source"],
+        rows, columns=["year", "projection_factor", "projection_source"]
     )
 
 
@@ -246,18 +236,11 @@ def project_production(
         reference["production"], errors="raise"
     ).astype(float)
 
-    generic = _normalise_generic(
-        projection_cfg.get("generic", {}),
-        reference_year,
-    )
+    generic = _normalise_generic(projection_cfg.get("generic", {}), reference_year)
     commodity_curves = _normalise_commodity_curves(
-        projection_cfg.get("commodities"),
-        reference_year,
+        projection_cfg.get("commodities"), reference_year
     )
-    overrides = load_overrides(
-        projection_cfg.get("file"),
-        reference_year,
-    )
+    overrides = load_overrides(projection_cfg.get("file"), reference_year)
 
     known_commodities = set(reference["commodity"])
     unknown_commodities = sorted(set(commodity_curves) - known_commodities)
@@ -286,8 +269,7 @@ def project_production(
         commodity = str(row.commodity)
 
         group_overrides = overrides.loc[
-            (overrides["country"] == country)
-            & (overrides["commodity"] == commodity)
+            (overrides["country"] == country) & (overrides["commodity"] == commodity)
         ]
 
         curve = _interpolate_curve(
@@ -342,8 +324,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     project_production(
-        args.reference_production,
-        args.config,
-        args.scenario,
-        args.output,
+        args.reference_production, args.config, args.scenario, args.output
     )

@@ -1,6 +1,5 @@
 import yaml
 
-
 # Read visualization settings once when Snakemake parses the workflow.
 with open("config/visualization.yaml", "r", encoding="utf-8") as f:
     visualization_cfg = yaml.safe_load(f).get("visualization", {})
@@ -29,13 +28,13 @@ rule plot_results:
         energy_demand="results/demand/industrial_energy_demand.csv",
         visualization_config="config/visualization.yaml",
     output:
-        touch(f"{plots_output_dir}/.plots_complete")
+        touch(f"{plots_output_dir}/.plots_complete"),
     log:
-        "logs/plots/plot_results.log"
+        "logs/plots/plot_results.log",
     conda:
         "../envs/module.yaml"
     shell:
-        'python workflow/scripts/plot_results.py '
+        "python workflow/scripts/plot_results.py "
         '--projected-production "{input.projected_production}" '
         '--route-production "{input.route_production}" '
         '--energy-demand "{input.energy_demand}" '
@@ -51,15 +50,15 @@ rule plot_spatial_maps:
         visualization_config="config/visualization.yaml",
         model_config="config/config.yaml",
     output:
-        touch(f"{maps_output_dir}/.maps_complete")
+        touch(f"{maps_output_dir}/.maps_complete"),
     log:
-        "logs/plots/plot_spatial_maps.log"
-    params:
-        output_dir=maps_output_dir
+        "logs/plots/plot_spatial_maps.log",
     conda:
         "../envs/module.yaml"
+    params:
+        output_dir=maps_output_dir,
     shell:
-        'python workflow/scripts/plot_spatial_maps.py '
+        "python workflow/scripts/plot_spatial_maps.py "
         '--regions "{input.regions}" '
         '--route-production "{input.route_production}" '
         '--energy-demand "{input.energy_demand}" '

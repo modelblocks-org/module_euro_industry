@@ -6,14 +6,14 @@ rule project_production:
         reference_production="results/historical/production_aggregated.csv",
         scenario=scenario_file,
     output:
-        "results/projections/production.csv"
+        "results/projections/production.csv",
     log:
-        "logs/projections/project_production.log"
+        "logs/projections/project_production.log",
     conda:
         "../envs/module.yaml"
     shell:
         (
-            'python workflow/scripts/project_production.py '
+            "python workflow/scripts/project_production.py "
             '--reference-production "{input.reference_production}" '
             '--config "config/config.yaml" '
             '--scenario "{input.scenario}" '
@@ -24,8 +24,8 @@ rule project_production:
 
 rule projections_all:
     input:
-        rules.project_production.output
+        rules.project_production.output,
     output:
-        touch("results/projections/.projections_complete")
+        touch("results/projections/.projections_complete"),
     conda:
         "../envs/module.yaml"

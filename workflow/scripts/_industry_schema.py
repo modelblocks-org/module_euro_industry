@@ -41,56 +41,242 @@ JRC_CODE_COLUMNS = [
 # Physical-output rows used from the JRC Industry workbooks.
 PRODUCTION_DEFINITIONS = {
     "ISI": [
-        dict(activity="Integrated steelworks", source_field="Integrated steelworks", commodity="STEEL", production_route="BF_BOF", unit="kt/a"),
-        dict(activity="Electric arc", source_field="Electric arc", commodity="STEEL", production_route="EAF", unit="kt/a"),
+        dict(
+            activity="Integrated steelworks",
+            source_field="Integrated steelworks",
+            commodity="STEEL",
+            production_route="BF_BOF",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Electric arc",
+            source_field="Electric arc",
+            commodity="STEEL",
+            production_route="EAF",
+            unit="kt/a",
+        ),
     ],
     "CHI": [
-        dict(activity="Basic chemicals", source_field="Basic chemicals (kt ethylene eq.)", commodity="BASIC_CHEMICALS", production_route="BASE_ROUTE", unit="kt ethylene eq./a"),
-        dict(activity="Other chemicals", source_field="Other chemicals (kt ethylene eq.)", commodity="OTHER_CHEMICALS", production_route="BASE_ROUTE", unit="kt ethylene eq./a"),
-        dict(activity="Pharmaceutical products etc.", source_field="Pharmaceutical products etc. (kt ethylene eq.)", commodity="PHARMACEUTICALS", production_route="BASE_ROUTE", unit="kt ethylene eq./a"),
+        dict(
+            activity="Basic chemicals",
+            source_field="Basic chemicals (kt ethylene eq.)",
+            commodity="BASIC_CHEMICALS",
+            production_route="BASE_ROUTE",
+            unit="kt ethylene eq./a",
+        ),
+        dict(
+            activity="Other chemicals",
+            source_field="Other chemicals (kt ethylene eq.)",
+            commodity="OTHER_CHEMICALS",
+            production_route="BASE_ROUTE",
+            unit="kt ethylene eq./a",
+        ),
+        dict(
+            activity="Pharmaceutical products etc.",
+            source_field="Pharmaceutical products etc. (kt ethylene eq.)",
+            commodity="PHARMACEUTICALS",
+            production_route="BASE_ROUTE",
+            unit="kt ethylene eq./a",
+        ),
     ],
     "NMM": [
-        dict(activity="Cement", source_field="Cement (kt)", commodity="CEMENT", production_route="BASE_ROUTE", unit="kt/a"),
-        dict(activity="Ceramics & other NMM", source_field="Ceramics & other NMM (kt bricks eq.)", commodity="CERAMICS", production_route="BASE_ROUTE", unit="kt bricks eq./a"),
-        dict(activity="Glass production", source_field="Glass production  (kt)", commodity="GLASS", production_route="BASE_ROUTE", unit="kt/a"),
+        dict(
+            activity="Cement",
+            source_field="Cement (kt)",
+            commodity="CEMENT",
+            production_route="BASE_ROUTE",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Ceramics & other NMM",
+            source_field="Ceramics & other NMM (kt bricks eq.)",
+            commodity="CERAMICS",
+            production_route="BASE_ROUTE",
+            unit="kt bricks eq./a",
+        ),
+        dict(
+            activity="Glass production",
+            source_field="Glass production  (kt)",
+            commodity="GLASS",
+            production_route="BASE_ROUTE",
+            unit="kt/a",
+        ),
     ],
     "PPA": [
-        dict(activity="Pulp production", source_field="Pulp production (kt)", commodity="PULP", production_route="BASE_ROUTE", unit="kt/a"),
-        dict(activity="Paper production", source_field="Paper production  (kt)", commodity="PAPER", production_route="BASE_ROUTE", unit="kt/a"),
-        dict(activity="Printing and media reproduction", source_field="Printing and media reproduction (kt paper eq.)", commodity="PRINTING", production_route="BASE_ROUTE", unit="kt paper eq./a"),
+        dict(
+            activity="Pulp production",
+            source_field="Pulp production (kt)",
+            commodity="PULP",
+            production_route="BASE_ROUTE",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Paper production",
+            source_field="Paper production  (kt)",
+            commodity="PAPER",
+            production_route="BASE_ROUTE",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Printing and media reproduction",
+            source_field="Printing and media reproduction (kt paper eq.)",
+            commodity="PRINTING",
+            production_route="BASE_ROUTE",
+            unit="kt paper eq./a",
+        ),
     ],
-    "FBT": [dict(activity="Food, beverages and tobacco", source_field="Physical output (index)", commodity="FBT", production_route="BASE_ROUTE", unit="index")],
+    "FBT": [
+        dict(
+            activity="Food, beverages and tobacco",
+            source_field="Physical output (index)",
+            commodity="FBT",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
     "NFM": [
-        dict(activity="Alumina production", source_field="Alumina production (kt)", commodity="ALUMINA", production_route="BASE_ROUTE", unit="kt/a"),
-        dict(activity="Aluminium - primary production", source_field="Aluminium - primary production", commodity="ALUMINIUM", production_route="PRIM_ALU", unit="kt/a"),
-        dict(activity="Aluminium - secondary production", source_field="Aluminium - secondary production", commodity="ALUMINIUM", production_route="SEC_ALU", unit="kt/a"),
-        dict(activity="Other non-ferrous metals", source_field="Other non-ferrous metals (kt lead eq.)", commodity="OTHER_NFM", production_route="BASE_ROUTE", unit="kt lead eq./a"),
+        dict(
+            activity="Alumina production",
+            source_field="Alumina production (kt)",
+            commodity="ALUMINA",
+            production_route="BASE_ROUTE",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Aluminium - primary production",
+            source_field="Aluminium - primary production",
+            commodity="ALUMINIUM",
+            production_route="PRIM_ALU",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Aluminium - secondary production",
+            source_field="Aluminium - secondary production",
+            commodity="ALUMINIUM",
+            production_route="SEC_ALU",
+            unit="kt/a",
+        ),
+        dict(
+            activity="Other non-ferrous metals",
+            source_field="Other non-ferrous metals (kt lead eq.)",
+            commodity="OTHER_NFM",
+            production_route="BASE_ROUTE",
+            unit="kt lead eq./a",
+        ),
     ],
-    "TRE": [dict(activity="Transport equipment", source_field="Physical output (index)", commodity="TRE", production_route="BASE_ROUTE", unit="index")],
-    "MAE": [dict(activity="Machinery equipment", source_field="Physical output (index)", commodity="MAE", production_route="BASE_ROUTE", unit="index")],
-    "TEL": [dict(activity="Textiles and leather", source_field="Physical output (index)", commodity="TEL", production_route="BASE_ROUTE", unit="index")],
-    "WWP": [dict(activity="Wood and wood products", source_field="Physical output (index)", commodity="WWP", production_route="BASE_ROUTE", unit="index")],
-    "OIS": [dict(activity="Other industrial sectors", source_field="Physical output (index)", commodity="OIS", production_route="BASE_ROUTE", unit="index")],
+    "TRE": [
+        dict(
+            activity="Transport equipment",
+            source_field="Physical output (index)",
+            commodity="TRE",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
+    "MAE": [
+        dict(
+            activity="Machinery equipment",
+            source_field="Physical output (index)",
+            commodity="MAE",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
+    "TEL": [
+        dict(
+            activity="Textiles and leather",
+            source_field="Physical output (index)",
+            commodity="TEL",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
+    "WWP": [
+        dict(
+            activity="Wood and wood products",
+            source_field="Physical output (index)",
+            commodity="WWP",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
+    "OIS": [
+        dict(
+            activity="Other industrial sectors",
+            source_field="Physical output (index)",
+            commodity="OIS",
+            production_route="BASE_ROUTE",
+            unit="index",
+        )
+    ],
 }
 
 # Known JRC subsector codes used in the Industry workbook. Unknown codes are
 # preserved rather than discarded; see ``schema_for_jrc_subsector`` below.
 JRC_SUBSECTOR_SCHEMA = {
-    ("ISI", "BF_BOF"): dict(activity="Integrated steelworks", commodity="STEEL", production_route="BF_BOF"),
-    ("ISI", "EAF"): dict(activity="Electric arc", commodity="STEEL", production_route="EAF"),
-    ("CHI", "BASIC_CHEM"): dict(activity="Basic chemicals", commodity="BASIC_CHEMICALS", production_route="BASE_ROUTE"),
-    ("CHI", "OTHER_CHEM"): dict(activity="Other chemicals", commodity="OTHER_CHEMICALS", production_route="BASE_ROUTE"),
-    ("CHI", "PHARMA"): dict(activity="Pharmaceutical products etc.", commodity="PHARMACEUTICALS", production_route="BASE_ROUTE"),
-    ("NMM", "CEM"): dict(activity="Cement", commodity="CEMENT", production_route="BASE_ROUTE"),
-    ("NMM", "CER"): dict(activity="Ceramics & other NMM", commodity="CERAMICS", production_route="BASE_ROUTE"),
-    ("NMM", "GLASS"): dict(activity="Glass production", commodity="GLASS", production_route="BASE_ROUTE"),
-    ("PPA", "PULP"): dict(activity="Pulp production", commodity="PULP", production_route="BASE_ROUTE"),
-    ("PPA", "PAPER"): dict(activity="Paper production", commodity="PAPER", production_route="BASE_ROUTE"),
-    ("PPA", "PRINT"): dict(activity="Printing and media reproduction", commodity="PRINTING", production_route="BASE_ROUTE"),
-    ("NFM", "ALUMINA"): dict(activity="Alumina production", commodity="ALUMINA", production_route="BASE_ROUTE"),
-    ("NFM", "PRIM_ALU"): dict(activity="Aluminium - primary production", commodity="ALUMINIUM", production_route="PRIM_ALU"),
-    ("NFM", "SEC_ALU"): dict(activity="Aluminium - secondary production", commodity="ALUMINIUM", production_route="SEC_ALU"),
-    ("NFM", "OTHER_NFM"): dict(activity="Other non-ferrous metals", commodity="OTHER_NFM", production_route="BASE_ROUTE"),
+    ("ISI", "BF_BOF"): dict(
+        activity="Integrated steelworks", commodity="STEEL", production_route="BF_BOF"
+    ),
+    ("ISI", "EAF"): dict(
+        activity="Electric arc", commodity="STEEL", production_route="EAF"
+    ),
+    ("CHI", "BASIC_CHEM"): dict(
+        activity="Basic chemicals",
+        commodity="BASIC_CHEMICALS",
+        production_route="BASE_ROUTE",
+    ),
+    ("CHI", "OTHER_CHEM"): dict(
+        activity="Other chemicals",
+        commodity="OTHER_CHEMICALS",
+        production_route="BASE_ROUTE",
+    ),
+    ("CHI", "PHARMA"): dict(
+        activity="Pharmaceutical products etc.",
+        commodity="PHARMACEUTICALS",
+        production_route="BASE_ROUTE",
+    ),
+    ("NMM", "CEM"): dict(
+        activity="Cement", commodity="CEMENT", production_route="BASE_ROUTE"
+    ),
+    ("NMM", "CER"): dict(
+        activity="Ceramics & other NMM",
+        commodity="CERAMICS",
+        production_route="BASE_ROUTE",
+    ),
+    ("NMM", "GLASS"): dict(
+        activity="Glass production", commodity="GLASS", production_route="BASE_ROUTE"
+    ),
+    ("PPA", "PULP"): dict(
+        activity="Pulp production", commodity="PULP", production_route="BASE_ROUTE"
+    ),
+    ("PPA", "PAPER"): dict(
+        activity="Paper production", commodity="PAPER", production_route="BASE_ROUTE"
+    ),
+    ("PPA", "PRINT"): dict(
+        activity="Printing and media reproduction",
+        commodity="PRINTING",
+        production_route="BASE_ROUTE",
+    ),
+    ("NFM", "ALUMINA"): dict(
+        activity="Alumina production",
+        commodity="ALUMINA",
+        production_route="BASE_ROUTE",
+    ),
+    ("NFM", "PRIM_ALU"): dict(
+        activity="Aluminium - primary production",
+        commodity="ALUMINIUM",
+        production_route="PRIM_ALU",
+    ),
+    ("NFM", "SEC_ALU"): dict(
+        activity="Aluminium - secondary production",
+        commodity="ALUMINIUM",
+        production_route="SEC_ALU",
+    ),
+    ("NFM", "OTHER_NFM"): dict(
+        activity="Other non-ferrous metals",
+        commodity="OTHER_NFM",
+        production_route="BASE_ROUTE",
+    ),
 }
 
 # Process normalization developed in the earlier test model. The raw JRC
@@ -136,10 +322,34 @@ PROCESS_MAPPING = {
 }
 
 CHEMICAL_SCHEMA = {
-    "Ammonia": dict(sector="CHI", sector_name=SECTOR_NAMES["CHI"], commodity="AMMONIA", production_route="BASE_ROUTE", unit="kt/a"),
-    "HVC": dict(sector="CHI", sector_name=SECTOR_NAMES["CHI"], commodity="HVC", production_route="BASE_ROUTE", unit="kt/a"),
-    "Chlorine": dict(sector="CHI", sector_name=SECTOR_NAMES["CHI"], commodity="CHLORINE", production_route="BASE_ROUTE", unit="kt/a"),
-    "Methanol": dict(sector="CHI", sector_name=SECTOR_NAMES["CHI"], commodity="METHANOL", production_route="BASE_ROUTE", unit="kt/a"),
+    "Ammonia": dict(
+        sector="CHI",
+        sector_name=SECTOR_NAMES["CHI"],
+        commodity="AMMONIA",
+        production_route="BASE_ROUTE",
+        unit="kt/a",
+    ),
+    "HVC": dict(
+        sector="CHI",
+        sector_name=SECTOR_NAMES["CHI"],
+        commodity="HVC",
+        production_route="BASE_ROUTE",
+        unit="kt/a",
+    ),
+    "Chlorine": dict(
+        sector="CHI",
+        sector_name=SECTOR_NAMES["CHI"],
+        commodity="CHLORINE",
+        production_route="BASE_ROUTE",
+        unit="kt/a",
+    ),
+    "Methanol": dict(
+        sector="CHI",
+        sector_name=SECTOR_NAMES["CHI"],
+        commodity="METHANOL",
+        production_route="BASE_ROUTE",
+        unit="kt/a",
+    ),
 }
 
 # Raw Eurostat product categories retained for the coke-oven add-on. They are

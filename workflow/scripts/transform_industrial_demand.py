@@ -14,13 +14,12 @@ routes are intensity based because they have no historical UED baseline.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import yaml
-
 
 HISTORICAL_TECH = "HISTORICAL"
 
@@ -30,7 +29,9 @@ def load_yaml(path: str | Path) -> dict:
         return yaml.safe_load(handle) or {}
 
 
-def _interp(year: int, reference_year: int, reference_value: float, anchors: dict) -> float:
+def _interp(
+    year: int, reference_year: int, reference_value: float, anchors: dict
+) -> float:
     points = {int(reference_year): float(reference_value)}
     points.update({int(y): float(v) for y, v in (anchors or {}).items()})
     xs = np.array(sorted(points), dtype=int)
@@ -38,7 +39,9 @@ def _interp(year: int, reference_year: int, reference_value: float, anchors: dic
     if len(xs) == 1:
         return float(ys[0])
     if year < xs.min() or year > xs.max():
-        raise ValueError(f"Year {year} outside interpolation range {xs.min()}-{xs.max()}.")
+        raise ValueError(
+            f"Year {year} outside interpolation range {xs.min()}-{xs.max()}."
+        )
     return float(np.interp(year, xs, ys))
 
 
@@ -47,20 +50,21 @@ def _validate_shares(shares: dict[str, float], label: str, tol: float = 1e-6) ->
         raise ValueError(f"Negative share in {label}: {shares}")
     total = sum(shares.values())
     if not np.isclose(total, 1.0, atol=tol):
-        raise ValueError(f"Shares in {label} sum to {total:.8f}, expected 1.0: {shares}")
+        raise ValueError(
+            f"Shares in {label} sum to {total:.8f}, expected 1.0: {shares}"
+        )
 
 
 def historical_route_shares(
-    historical_production: pd.DataFrame,
-    reference_year: int,
+    historical_production: pd.DataFrame, reference_year: int
 ) -> dict[tuple[str, str], dict[str, float]]:
     data = historical_production.loc[
         historical_production["year"].astype(int).eq(reference_year)
     ].copy()
     data["production"] = pd.to_numeric(data["production"], errors="raise")
-    grouped = data.groupby(["country", "commodity", "production_route"], as_index=False)[
-        "production"
-    ].sum()
+    grouped = data.groupby(
+        ["country", "commodity", "production_route"], as_index=False
+    )["production"].sum()
     result: dict[tuple[str, str], dict[str, float]] = {}
     for (country, commodity), group in grouped.groupby(["country", "commodity"]):
         total = group["production"].sum()
@@ -122,7 +126,9 @@ def route_share_curve(
     if not all_routes:
         raise ValueError(f"No production routes available for {country}/{commodity}.")
 
-    anchor_years = sorted({int(y) for route in scenario.values() for y in (route or {})})
+    anchor_years = sorted(
+        {int(y) for route in scenario.values() for y in (route or {})}
+    )
     for anchor in anchor_years:
         anchor_shares = {}
         for route in all_routes:
@@ -196,7 +202,9 @@ def build_route_production(
         # production projection is relative to the historical baseline, a zero
         # reference value remains zero in all projected years unless the
         # projection framework is explicitly extended to allow absolute entries.
-        production_values = pd.to_numeric(group["production"], errors="coerce").fillna(0.0)
+        production_values = pd.to_numeric(group["production"], errors="coerce").fillna(
+            0.0
+        )
         if production_values.abs().max() <= 1e-12:
             continue
 
@@ -238,7 +246,9 @@ def build_route_production(
 
         # Make fallbacks explicit in the output for traceability.
         if (country, commodity) not in hist_shares:
-            if has_route_scenario and "BASE_ROUTE" in (scenario_route_shares.get(commodity, {}) or {}):
+            if has_route_scenario and "BASE_ROUTE" in (
+                scenario_route_shares.get(commodity, {}) or {}
+            ):
                 curve["route_share_source"] = "scenario_from_base_route_fallback"
             elif not has_route_scenario:
                 curve["route_share_source"] = "fallback_base_route"
@@ -251,13 +261,20 @@ def build_route_production(
     if not frames:
         return pd.DataFrame(
             columns=[
-                "country", "commodity", "year", "production_route",
-                "route_share", "route_share_source", "production",
-                "unit", "route_production",
+                "country",
+                "commodity",
+                "year",
+                "production_route",
+                "route_share",
+                "route_share_source",
+                "production",
+                "unit",
+                "route_production",
             ]
         )
 
     return pd.concat(frames, ignore_index=True)
+
 
 def historical_route_intensities(
     historical_energy: pd.DataFrame,
@@ -301,11 +318,7 @@ def historical_route_intensities(
     ].copy()
 
     modelled_keys = route_prod[keys].drop_duplicates()
-    unmatched = energy.merge(
-        modelled_keys.assign(_modelled=True),
-        on=keys,
-        how="left",
-    )
+    unmatched = energy.merge(modelled_keys.assign(_modelled=True), on=keys, how="left")
     unmatched = unmatched.loc[unmatched["_modelled"].isna(), keys].drop_duplicates()
     if not unmatched.empty:
         print(
@@ -316,12 +329,7 @@ def historical_route_intensities(
 
     # Inner join is deliberate: only energy demand associated with an actually
     # modelled historical production route is carried into future intensities.
-    energy = energy.merge(
-        route_prod,
-        on=keys,
-        how="inner",
-        validate="many_to_one",
-    )
+    energy = energy.merge(route_prod, on=keys, how="inner", validate="many_to_one")
 
     energy["demand"] = pd.to_numeric(energy["demand"], errors="raise")
     energy["intensity_per_production_unit"] = (
@@ -331,9 +339,7 @@ def historical_route_intensities(
 
 
 def _transformation_curve(
-    transformation: dict,
-    years: Iterable[int],
-    reference_year: int,
+    transformation: dict, years: Iterable[int], reference_year: int
 ) -> dict[int, dict[str, float]]:
     techs = transformation["technologies"]
     all_techs = list(techs)
@@ -351,7 +357,9 @@ def _transformation_curve(
             elif anchor in mapping:
                 values[tech] = float(mapping[anchor])
             else:
-                proc_label = transformation.get('process') or transformation.get('processes')
+                proc_label = transformation.get("process") or transformation.get(
+                    "processes"
+                )
                 raise ValueError(
                     f"Technology '{tech}' missing share for {transformation['commodity']}/"
                     f"{transformation['production_route']}/{proc_label} anchor {anchor}."
@@ -363,7 +371,9 @@ def _transformation_curve(
         values = {}
         for tech in all_techs:
             ref = 1.0 if tech == HISTORICAL_TECH else 0.0
-            values[tech] = _interp(int(year), reference_year, ref, techs.get(tech, {}) or {})
+            values[tech] = _interp(
+                int(year), reference_year, ref, techs.get(tech, {}) or {}
+            )
         _validate_shares(values, f"process transformation {year}", tol=1e-5)
         curves[int(year)] = values
     return curves
@@ -411,7 +421,11 @@ def _value_selector(series: pd.Series, selector) -> pd.Series:
 
 def _selector_mask(df: pd.DataFrame, tr: dict) -> pd.Series:
     processes = _selected_processes(tr)
-    process_mask = pd.Series(True, index=df.index) if "*" in processes else df["process"].astype(str).isin(processes)
+    process_mask = (
+        pd.Series(True, index=df.index)
+        if "*" in processes
+        else df["process"].astype(str).isin(processes)
+    )
     mask = (
         _value_selector(df["commodity"], tr.get("commodity", "*"))
         & _value_selector(df["production_route"], tr.get("production_route", "*"))
@@ -469,7 +483,9 @@ def apply_process_transformations(
                 skipped = group.copy()
                 skipped["technology_scenario"] = HISTORICAL_TECH
                 skipped["technology_share"] = 1.0
-                skipped["transformation_source"] = "process_transformation_skipped_zero_ued"
+                skipped["transformation_source"] = (
+                    "process_transformation_skipped_zero_ued"
+                )
                 generated.append(skipped)
                 print(
                     "WARNING: skipping process transformation with no positive UED: "
@@ -503,7 +519,10 @@ def apply_process_transformations(
                 if not 0 < eff <= 10:
                     raise ValueError(f"Invalid efficiency/COP for {tech}: {eff}")
                 carrier_defs = definition["carriers"]
-                carrier_shares = {c: float(v["share"] if isinstance(v, dict) else v) for c, v in carrier_defs.items()}
+                carrier_shares = {
+                    c: float(v["share"] if isinstance(v, dict) else v)
+                    for c, v in carrier_defs.items()
+                }
                 _validate_shares(carrier_shares, f"carrier shares of {tech}")
 
                 tech_ued = ued * share
@@ -549,12 +568,13 @@ def apply_process_transformations(
 
 
 def build_existing_route_demand(
-    route_production: pd.DataFrame,
-    historical_intensity: pd.DataFrame,
+    route_production: pd.DataFrame, historical_intensity: pd.DataFrame
 ) -> pd.DataFrame:
     new_route_pairs = set()
     # Existing routes are simply those present in historical intensity.
-    existing_keys = historical_intensity[["country", "commodity", "production_route"]].drop_duplicates()
+    existing_keys = historical_intensity[
+        ["country", "commodity", "production_route"]
+    ].drop_duplicates()
     rp = route_production.merge(
         existing_keys.assign(_existing=True),
         on=["country", "commodity", "production_route"],
@@ -568,7 +588,9 @@ def build_existing_route_demand(
         how="left",
         suffixes=("", "_hist"),
     )
-    merged["demand"] = merged["route_production"] * merged["intensity_per_production_unit"]
+    merged["demand"] = (
+        merged["route_production"] * merged["intensity_per_production_unit"]
+    )
     if "unit_hist" in merged.columns:
         merged["unit"] = merged["unit_hist"]
     merged["technology_scenario"] = HISTORICAL_TECH
@@ -612,7 +634,9 @@ def build_new_route_demand(
         for process_name in route_def.get("processes", []):
             process_def = processes.get(process_name)
             if not process_def:
-                raise ValueError(f"New route '{route_name}' references undefined process '{process_name}'.")
+                raise ValueError(
+                    f"New route '{route_name}' references undefined process '{process_name}'."
+                )
             entries = _intensity_entries(process_def)
             if not entries:
                 raise ValueError(
@@ -728,24 +752,63 @@ def transform_demand(
     route_production = build_route_production(
         projected, hist_prod, reference_year, route_shares
     )
-    hist_intensity = historical_route_intensities(hist_energy, hist_prod, reference_year)
+    hist_intensity = historical_route_intensities(
+        hist_energy, hist_prod, reference_year
+    )
     existing = build_existing_route_demand(route_production, hist_intensity)
-    existing = apply_process_transformations(existing, transformations, processes, reference_year)
+    existing = apply_process_transformations(
+        existing, transformations, processes, reference_year
+    )
     new = build_new_route_demand(
         route_production, route_definitions, processes, hist_intensity
     )
 
-    demand = pd.concat([existing, new], ignore_index=True, sort=False) if not new.empty else existing
+    demand = (
+        pd.concat([existing, new], ignore_index=True, sort=False)
+        if not new.empty
+        else existing
+    )
     preferred = [
-        "country", "year", "sector", "sector_name", "commodity", "production_route",
-        "route_share", "route_production", "activity", "process", "technology",
-        "technology_scenario", "technology_share", "carrier", "use_type", "energy_layer",
-        "demand", "unit", "source", "source_note", "transformation_source",
+        "country",
+        "year",
+        "sector",
+        "sector_name",
+        "commodity",
+        "production_route",
+        "route_share",
+        "route_production",
+        "activity",
+        "process",
+        "technology",
+        "technology_scenario",
+        "technology_share",
+        "carrier",
+        "use_type",
+        "energy_layer",
+        "demand",
+        "unit",
+        "source",
+        "source_note",
+        "transformation_source",
     ]
-    columns = [c for c in preferred if c in demand.columns] + [c for c in demand.columns if c not in preferred]
+    columns = [c for c in preferred if c in demand.columns] + [
+        c for c in demand.columns if c not in preferred
+    ]
     demand = demand[columns]
     demand.sort_values(
-        [c for c in ["country", "commodity", "year", "production_route", "process", "energy_layer", "carrier"] if c in demand.columns],
+        [
+            c
+            for c in [
+                "country",
+                "commodity",
+                "year",
+                "production_route",
+                "process",
+                "energy_layer",
+                "carrier",
+            ]
+            if c in demand.columns
+        ],
         inplace=True,
     )
 
@@ -754,7 +817,9 @@ def transform_demand(
     output_demand_path.parent.mkdir(parents=True, exist_ok=True)
     output_route_production_path.parent.mkdir(parents=True, exist_ok=True)
     demand.to_csv(output_demand_path, index=False, float_format="%.8f")
-    route_production.to_csv(output_route_production_path, index=False, float_format="%.8f")
+    route_production.to_csv(
+        output_route_production_path, index=False, float_format="%.8f"
+    )
     return demand, route_production
 
 

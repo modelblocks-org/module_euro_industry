@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
-
 from build_spatial_distribution_keys import spatial_category
 
 
@@ -45,9 +44,7 @@ def attach_category(df: pd.DataFrame) -> pd.DataFrame:
         if commodity in commodity_map:
             categories.append(commodity_map[commodity])
         elif has_sector:
-            categories.append(
-                spatial_category(str(getattr(row, "sector")), commodity)
-            )
+            categories.append(spatial_category(str(getattr(row, "sector")), commodity))
         else:
             categories.append("Other non-classified")
 
@@ -56,8 +53,7 @@ def attach_category(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _restrict_to_spatial_scope(
-    df: pd.DataFrame,
-    distribution_keys: pd.DataFrame,
+    df: pd.DataFrame, distribution_keys: pd.DataFrame
 ) -> pd.DataFrame:
     """Keep only countries represented in the user's regional GeoJSON.
 
@@ -87,8 +83,7 @@ def _restrict_to_spatial_scope(
         print(
             "Spatial disaggregation: skipping "
             f"{n_omitted} rows for countries not represented in the "
-            "user GeoJSON: "
-            + ", ".join(omitted_countries)
+            "user GeoJSON: " + ", ".join(omitted_countries)
         )
         out = out.loc[~omitted_mask].copy()
 
@@ -108,7 +103,10 @@ def _filter_years(df: pd.DataFrame, years: list[int] | None) -> pd.DataFrame:
     requested = {int(y) for y in years}
     missing = sorted(requested - available)
     if missing:
-        print("Spatial disaggregation: requested years not available in input: " + ", ".join(map(str, missing)))
+        print(
+            "Spatial disaggregation: requested years not available in input: "
+            + ", ".join(map(str, missing))
+        )
 
     out = out.loc[out["year"].isin(sorted(requested))].copy()
     return out
@@ -125,9 +123,7 @@ def disaggregate(
     df = attach_category(df)
 
     merged = df.merge(
-        distribution_keys[
-            ["country", "region", "spatial_category", "key", "source"]
-        ],
+        distribution_keys[["country", "region", "spatial_category", "key", "source"]],
         on=["country", "spatial_category"],
         how="left",
         validate="many_to_many",
@@ -163,14 +159,16 @@ def main() -> None:
     parser.add_argument("--config", required=True)
     args = parser.parse_args()
 
-    with open(args.config, "r", encoding="utf-8") as f:
+    with open(args.config, encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
 
     spatial_cfg = cfg.get("spatial_disaggregation", {})
     years = spatial_cfg.get("years")
     if years is not None:
         years = [int(y) for y in years]
-        print("Spatial disaggregation: filtering to years: " + ", ".join(map(str, years)))
+        print(
+            "Spatial disaggregation: filtering to years: " + ", ".join(map(str, years))
+        )
     else:
         print("Spatial disaggregation: no year filter configured; keeping all years.")
 

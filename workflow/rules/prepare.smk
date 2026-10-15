@@ -9,51 +9,49 @@ rule prepare_all:
     output:
         touch("results/historical/.prepare_complete"),
     conda:
-        "../envs/module.yaml",
+        "../envs/module.yaml"
 
 
 rule prepare_ammonia_production:
-    message:
-        "Prepare historical ammonia production from USGS."
     input:
-        usgs="resources/automatic/ammonia/usgs.xlsx"
+        usgs="resources/automatic/ammonia/usgs.xlsx",
     output:
-        "resources/automatic/prepare/ammonia_production.csv"
+        "resources/automatic/prepare/ammonia_production.csv",
     log:
-        "logs/prepare/prepare_ammonia_production.log"
+        "logs/prepare/prepare_ammonia_production.log",
     conda:
         "../envs/module.yaml"
+    message:
+        "Prepare historical ammonia production from USGS."
     shell:
-        'python workflow/scripts/prepare_ammonia_production.py '
+        "python workflow/scripts/prepare_ammonia_production.py "
         '--input "{input.usgs}" '
         '--output "{output}" '
         '> "{log}" 2>&1'
 
 
 rule prepare_coke_transformation:
-    message:
-        "Prepare historical coke-oven transformation output from Eurostat."
     input:
-        eurostat_dir="resources/automatic/eurostat"
+        eurostat_dir="resources/automatic/eurostat",
     output:
-        "resources/automatic/prepare/coke_transformation.csv"
-    params:
-        countries=" ".join(config["countries"])
+        "resources/automatic/prepare/coke_transformation.csv",
     log:
-        "logs/prepare/prepare_coke_transformation.log"
+        "logs/prepare/prepare_coke_transformation.log",
     conda:
         "../envs/module.yaml"
+    params:
+        countries=" ".join(config["countries"]),
+    message:
+        "Prepare historical coke-oven transformation output from Eurostat."
     shell:
-        'python workflow/scripts/prepare_coke_transformation.py '
+        "python workflow/scripts/prepare_coke_transformation.py "
         '--eurostat-dir "{input.eurostat_dir}" '
-        '--countries {params.countries} '
+        "--countries {params.countries} "
         '--output "{output}" '
         '> "{log}" 2>&1'
 
 
 rule prepare_current_production:
-    message:
-        "Prepare route-preserving historical industrial production."
     input:
         jrc_dir="resources/automatic/jrc_idees",
         eurostat_dir="resources/automatic/eurostat",
@@ -63,11 +61,13 @@ rule prepare_current_production:
         production="results/historical/production.csv",
         aggregated="results/historical/production_aggregated.csv",
     log:
-        "logs/prepare/prepare_current_production.log"
+        "logs/prepare/prepare_current_production.log",
     conda:
         "../envs/module.yaml"
+    message:
+        "Prepare route-preserving historical industrial production."
     shell:
-        'python workflow/scripts/prepare_current_production.py '
+        "python workflow/scripts/prepare_current_production.py "
         '--config "config/config.yaml" '
         '--jrc-dir "{input.jrc_dir}" '
         '--eurostat-dir "{input.eurostat_dir}" '
@@ -79,20 +79,20 @@ rule prepare_current_production:
 
 
 rule prepare_current_energy_demand:
-    message:
-        "Prepare route/activity-preserving historical industrial energy demand."
     input:
         jrc_dir="resources/automatic/jrc_idees",
         production=rules.prepare_current_production.output.production,
         coke=rules.prepare_coke_transformation.output,
     output:
-        "results/historical/energy_demand.csv"
+        "results/historical/energy_demand.csv",
     log:
-        "logs/prepare/prepare_current_energy_demand.log"
+        "logs/prepare/prepare_current_energy_demand.log",
     conda:
         "../envs/module.yaml"
+    message:
+        "Prepare route/activity-preserving historical industrial energy demand."
     shell:
-        'python workflow/scripts/prepare_current_energy_demand.py '
+        "python workflow/scripts/prepare_current_energy_demand.py "
         '--config "config/config.yaml" '
         '--jrc-dir "{input.jrc_dir}" '
         '--production "{input.production}" '

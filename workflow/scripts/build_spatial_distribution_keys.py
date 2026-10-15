@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import yaml
 
-
 HOTMAPS_CATEGORY_BY_SECTOR = {
     "ISI": "Iron and steel",
     "CHI": "Chemical industry",
@@ -36,7 +35,9 @@ def spatial_category(sector: str, commodity: str) -> str:
     return HOTMAPS_CATEGORY_BY_SECTOR.get(sector, "Other non-classified")
 
 
-def read_regions(path: str, region_id_column: str, country_column: str | None) -> gpd.GeoDataFrame:
+def read_regions(
+    path: str, region_id_column: str, country_column: str | None
+) -> gpd.GeoDataFrame:
     regions = gpd.read_file(path)
     if region_id_column not in regions.columns:
         raise ValueError(f"Region id column '{region_id_column}' not found in {path}.")
@@ -84,7 +85,9 @@ def read_hotmaps(path: str) -> gpd.GeoDataFrame:
     return gdf
 
 
-def assign_sites_to_regions(hotmaps: gpd.GeoDataFrame, regions: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def assign_sites_to_regions(
+    hotmaps: gpd.GeoDataFrame, regions: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
     joined = gpd.sjoin(
         hotmaps,
         regions[["region", "country", "geometry"]],
@@ -96,7 +99,9 @@ def assign_sites_to_regions(hotmaps: gpd.GeoDataFrame, regions: gpd.GeoDataFrame
     return joined
 
 
-def normalized_region_key(facilities: pd.DataFrame, region_index: pd.Index) -> pd.Series:
+def normalized_region_key(
+    facilities: pd.DataFrame, region_index: pd.Index
+) -> pd.Series:
     """Return region shares summing to one using Hotmaps site emissions as weights."""
     if facilities.empty:
         return pd.Series(0.0, index=region_index, dtype=float)
@@ -144,18 +149,22 @@ def read_generic_key(path: str, cfg: dict, default_source_name: str) -> pd.DataF
 
 
 def generic_key_for_country(
-    table: pd.DataFrame | None,
-    country: str,
-    region_index: pd.Index,
+    table: pd.DataFrame | None, country: str, region_index: pd.Index
 ) -> pd.Series | None:
     if table is None:
         return None
 
-    subset = table[(table["country"] == country) & (table["region"].isin(region_index))].copy()
+    subset = table[
+        (table["country"] == country) & (table["region"].isin(region_index))
+    ].copy()
     if subset.empty:
         return None
 
-    weights = subset.groupby("region", observed=True)["weight"].sum().reindex(region_index, fill_value=0.0)
+    weights = (
+        subset.groupby("region", observed=True)["weight"]
+        .sum()
+        .reindex(region_index, fill_value=0.0)
+    )
     weights = pd.to_numeric(weights, errors="coerce").fillna(0.0).clip(lower=0.0)
     if weights.sum() <= 0:
         return None
@@ -187,7 +196,11 @@ def choose_fallback(
             if key is not None:
                 source = "user_key"
                 if user_key is not None and "source_name" in user_key.columns:
-                    vals = user_key.loc[user_key["country"] == country, "source_name"].dropna().unique()
+                    vals = (
+                        user_key.loc[user_key["country"] == country, "source_name"]
+                        .dropna()
+                        .unique()
+                    )
                     if len(vals):
                         source = str(vals[0])
                 return key, source, 0
@@ -288,11 +301,12 @@ def main() -> None:
     region_id_column = cfg.get("region_id_column", "name")
     country_column = cfg.get("country_column")
     fallback_options = cfg.get(
-        "fallback_options",
-        ["generic_industry", "population", "uniform"],
+        "fallback_options", ["generic_industry", "population", "uniform"]
     )
     if not isinstance(fallback_options, list) or not fallback_options:
-        raise ValueError("spatial_disaggregation.fallback_options must be a non-empty list.")
+        raise ValueError(
+            "spatial_disaggregation.fallback_options must be a non-empty list."
+        )
 
     regions = read_regions(args.regions, region_id_column, country_column)
     hotmaps = read_hotmaps(args.hotmaps)
@@ -301,17 +315,13 @@ def main() -> None:
     population = None
     if args.population:
         population = read_generic_key(
-            args.population,
-            cfg.get("population", {}),
-            default_source_name="population",
+            args.population, cfg.get("population", {}), default_source_name="population"
         )
 
     user_key = None
     if args.user_key:
         user_key = read_generic_key(
-            args.user_key,
-            cfg.get("user_key", {}),
-            default_source_name="user_key",
+            args.user_key, cfg.get("user_key", {}), default_source_name="user_key"
         )
 
     categories = sorted(

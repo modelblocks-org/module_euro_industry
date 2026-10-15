@@ -14,7 +14,10 @@ IDEES_RENAME = {"GR": "EL", "GB": "UK"}
 
 
 def eurostat_per_country(input_eurostat: str | Path, country: str) -> pd.DataFrame:
-    filename = Path(input_eurostat) / f"{country}-Energy-balance-sheets-April-2023-edition.xlsb"
+    filename = (
+        Path(input_eurostat)
+        / f"{country}-Energy-balance-sheets-April-2023-edition.xlsb"
+    )
     sheets = pd.read_excel(
         filename,
         engine="pyxlsb",
@@ -28,7 +31,9 @@ def eurostat_per_country(input_eurostat: str | Path, country: str) -> pd.DataFra
 
 
 def build_eurostat(input_eurostat: str | Path, countries: list[str]) -> pd.DataFrame:
-    countries_no_che = {IDEES_RENAME.get(country, country) for country in countries} - {"CH"}
+    countries_no_che = {IDEES_RENAME.get(country, country) for country in countries} - {
+        "CH"
+    }
     func = partial(eurostat_per_country, input_eurostat)
     dfs = [func(country) for country in countries_no_che]
 
@@ -45,14 +50,18 @@ def build_eurostat(input_eurostat: str | Path, countries: list[str]) -> pd.DataF
 
     int_avia = df.index.get_level_values(3) == "International aviation"
     temp = df.loc[int_avia]
-    temp.index = pd.MultiIndex.from_frame(temp.index.to_frame().fillna("International aviation"))
+    temp.index = pd.MultiIndex.from_frame(
+        temp.index.to_frame().fillna("International aviation")
+    )
     df = pd.concat([temp, df.loc[~int_avia]]).sort_index()
 
     for country in countries_no_che:
         slicer = IDX[country, :, :, :, "Domestic aviation"]
         for col in ["Total", "Fossil energy"]:
             if col in df.columns:
-                df.loc[slicer, col] = df.loc[slicer, col].replace(0.0, np.nan).ffill().bfill()
+                df.loc[slicer, col] = (
+                    df.loc[slicer, col].replace(0.0, np.nan).ffill().bfill()
+                )
 
     df.rename(
         index={
@@ -74,9 +83,7 @@ def build_eurostat(input_eurostat: str | Path, countries: list[str]) -> pd.DataF
 
 
 def prepare_coke_transformation(
-    eurostat_dir: str | Path,
-    countries: list[str],
-    output_path: str | Path,
+    eurostat_dir: str | Path, countries: list[str], output_path: str | Path
 ) -> None:
     eurostat = build_eurostat(eurostat_dir, countries)
     slicer = pd.IndexSlice[:, :, :, "Coke ovens", "Other sources", :]

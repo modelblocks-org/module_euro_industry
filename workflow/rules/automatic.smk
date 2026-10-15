@@ -16,171 +16,171 @@ rule download_all:
         "resources/automatic/eurostat",
         "resources/automatic/jrc_idees",
     output:
-        touch("resources/automatic/.downloads_complete")
+        touch("resources/automatic/.downloads_complete"),
     conda:
         "../envs/module.yaml"
 
 
 rule download_eurostat:
-    message:
-        "Download stable Eurostat energy balances."
     output:
-        "resources/automatic/eurostat.zip"
-    params:
-        url=internal["resources"]["automatic"]["eurostat"]
+        "resources/automatic/eurostat.zip",
     log:
-        "logs/automatic/download_eurostat.log"
+        "logs/automatic/download_eurostat.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["eurostat"],
+    message:
+        "Download stable Eurostat energy balances."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_jrc_idees:
-    message:
-        "Download the JRC-IDEES dataset."
     output:
-        "resources/automatic/jrc_idees.zip"
-    params:
-        url=internal["resources"]["automatic"]["jrc_idees"]
+        "resources/automatic/jrc_idees.zip",
     log:
-        "logs/automatic/download_jrc_idees.log"
+        "logs/automatic/download_jrc_idees.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["jrc_idees"],
+    message:
+        "Download the JRC-IDEES dataset."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_hotmaps:
-    message:
-        "Download the Hotmaps energy-intensive industry dataset."
     output:
-        "resources/automatic/hotmaps.csv"
-    params:
-        url=internal["resources"]["automatic"]["hotmaps"]
+        "resources/automatic/hotmaps.csv",
     log:
-        "logs/automatic/download_hotmaps.log"
+        "logs/automatic/download_hotmaps.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["hotmaps"],
+    message:
+        "Download the Hotmaps energy-intensive industry dataset."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_ammonia_usgs:
-    message:
-        "Download the U.S. Geological Survey ammonia dataset."
     output:
-        "resources/automatic/ammonia/usgs.xlsx"
-    params:
-        url=internal["resources"]["automatic"]["ammonia"]["usgs"]
+        "resources/automatic/ammonia/usgs.xlsx",
     log:
-        "logs/automatic/download_ammonia_usgs.log"
+        "logs/automatic/download_ammonia_usgs.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["ammonia"]["usgs"],
+    message:
+        "Download the U.S. Geological Survey ammonia dataset."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_ammonia_plants:
-    message:
-        "Download ammonia plants collected by PyPSA-Eur."
     output:
-        "resources/automatic/ammonia/plants.csv"
-    params:
-        url=internal["resources"]["automatic"]["ammonia"]["plants"]
+        "resources/automatic/ammonia/plants.csv",
     log:
-        "logs/automatic/download_ammonia_plants.log"
+        "logs/automatic/download_ammonia_plants.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["ammonia"]["plants"],
+    message:
+        "Download ammonia plants collected by PyPSA-Eur."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_GEM_SPT:
-    message:
-        "Download the Global Energy Monitor Steel Plant Tracker."
     output:
-        "resources/automatic/GEM_SPT.xlsx"
-    params:
-        url=internal["resources"]["automatic"]["GEM_SPT"]
+        "resources/automatic/GEM_SPT.xlsx",
     log:
-        "logs/automatic/download_GEM_SPT.log"
+        "logs/automatic/download_GEM_SPT.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["GEM_SPT"],
+    message:
+        "Download the Global Energy Monitor Steel Plant Tracker."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_cement_non_eu:
-    message:
-        "Download non-EU cement plants collected by PyPSA-Eur."
     output:
-        "resources/automatic/cement_non_eu.csv"
-    params:
-        url=internal["resources"]["automatic"]["non_eu"]["cement"]
+        "resources/automatic/cement_non_eu.csv",
     log:
-        "logs/automatic/download_cement_non_eu.log"
+        "logs/automatic/download_cement_non_eu.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["non_eu"]["cement"],
+    message:
+        "Download non-EU cement plants collected by PyPSA-Eur."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_refineries_non_eu:
-    message:
-        "Download non-EU refineries collected by PyPSA-Eur."
     output:
-        "resources/automatic/non_eu/refineries.csv"
-    params:
-        url=internal["resources"]["automatic"]["non_eu"]["refineries"]
+        "resources/automatic/non_eu/refineries.csv",
     log:
-        "logs/automatic/download_refineries_non_eu.log"
+        "logs/automatic/download_refineries_non_eu.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["non_eu"]["refineries"],
+    message:
+        "Download non-EU refineries collected by PyPSA-Eur."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule download_CHE_industry:
-    message:
-        "Download Swiss industrial production by subsector."
     output:
-        "resources/automatic/CHE_industry.csv"
-    params:
-        url=internal["resources"]["automatic"]["CHE_industry"]
+        "resources/automatic/CHE_industry.csv",
     log:
-        "logs/automatic/download_CHE_industry.log"
+        "logs/automatic/download_CHE_industry.log",
     conda:
         "../envs/module.yaml"
+    params:
+        url=internal["resources"]["automatic"]["CHE_industry"],
+    message:
+        "Download Swiss industrial production by subsector."
     shell:
         'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
 
 
 rule unzip_eurostat:
-    message:
-        "Extract Eurostat energy balances."
     input:
-        "resources/automatic/eurostat.zip"
+        "resources/automatic/eurostat.zip",
     output:
-        directory("resources/automatic/eurostat")
+        directory("resources/automatic/eurostat"),
     log:
-        "logs/automatic/unzip_eurostat.log"
+        "logs/automatic/unzip_eurostat.log",
     conda:
         "../envs/module.yaml"
+    message:
+        "Extract Eurostat energy balances."
     shell:
         'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'
 
 
 rule unzip_jrc_idees:
-    message:
-        "Extract JRC-IDEES."
     input:
-        "resources/automatic/jrc_idees.zip"
+        "resources/automatic/jrc_idees.zip",
     output:
-        directory("resources/automatic/jrc_idees")
+        directory("resources/automatic/jrc_idees"),
     log:
-        "logs/automatic/unzip_jrc_idees.log"
+        "logs/automatic/unzip_jrc_idees.log",
     conda:
         "../envs/module.yaml"
+    message:
+        "Extract JRC-IDEES."
     shell:
         'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'

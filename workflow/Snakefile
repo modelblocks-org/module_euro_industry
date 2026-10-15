@@ -1,4 +1,3 @@
-
 import yaml
 from snakemake.utils import min_version
 
@@ -18,6 +17,7 @@ min_version("9.19")
 # Load the example configuration. This will be overridden by users.
 configfile: workflow.source_path("../config/config.yaml")
 
+
 # FIXME: define a schema for the configuration file and other .yaml input files.
 # Validate the configuration using the schema file.
 # validate(config, workflow.source_path("internal/config.schema.yaml"))
@@ -25,6 +25,7 @@ configfile: workflow.source_path("../config/config.yaml")
 # Load internal settings separately so users cannot modify them.
 with open(workflow.source_path("internal/settings.yaml"), "r", encoding="utf-8") as f:
     internal = yaml.safe_load(f)
+
 
 # Add all your includes here.
 include: "rules/automatic.smk"
@@ -34,15 +35,15 @@ include: "rules/transformations.smk"
 include: "rules/visualizations.smk"
 include: "rules/spatial.smk"
 
+
 # FIXME: assess if there are any files that need to be called via source_path
 # Add additional files to be delivered alongside the workflow here.
 # This is needed e.g. for python code files that are never
 # explicitly used as a script or input in a snakemake rule.
 # e.g.: workflow.source_path("scripts/_utils.py")
 
+
 rule all:
-    message:
-        "ERROR: Invalid `rule all:` call"
     default_target: True
     output:
         "INVALID",
@@ -50,5 +51,7 @@ rule all:
         stderr="<logs>/all.stderr",
     conda:
         "envs/module.yaml"
+    message:
+        "ERROR: Invalid `rule all:` call"
     shell:
         'echo "This workflow must be called as a snakemake module." > {log.stderr}'
