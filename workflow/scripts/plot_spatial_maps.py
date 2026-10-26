@@ -450,9 +450,7 @@ def main() -> None:
         "route production",
     )
     energy = _normalise_region_column(
-        pd.read_parquet(args.energy_demand),
-        configured_region_col,
-        "energy demand",
+        pd.read_parquet(args.energy_demand), configured_region_col, "energy demand"
     )
 
     outdir = Path(args.output_dir)
