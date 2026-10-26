@@ -19,14 +19,13 @@ feedstocks and avoids silently dropping feedstock from efficiency-ready data.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 import country_converter as coco
 import numpy as np
 import pandas as pd
 import yaml
-
 from _industry_schema import (
     CHEMICAL_SCHEMA,
     COKE_CARRIERS,
@@ -79,10 +78,7 @@ def _normalize_process_fields(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def read_jrc_energy_sheet(
-    file_path: Path,
-    sector: str,
-    year: int,
-    energy_layer: str,
+    file_path: Path, sector: str, year: int, energy_layer: str
 ) -> pd.DataFrame:
     """Read one JRC ``<sector>_fec`` or ``<sector>_ued`` sheet.
 
@@ -112,7 +108,9 @@ def read_jrc_energy_sheet(
     split = coded["Code"].astype(str).str.split(".", expand=True)
     split = split.iloc[:, : len(JRC_CODE_COLUMNS)]
     split.columns = JRC_CODE_COLUMNS[: split.shape[1]]
-    data = pd.concat([coded.reset_index(drop=True), split.reset_index(drop=True)], axis=1)
+    data = pd.concat(
+        [coded.reset_index(drop=True), split.reset_index(drop=True)], axis=1
+    )
 
     for column in JRC_CODE_COLUMNS:
         if column not in data.columns:
@@ -251,9 +249,9 @@ def read_jrc_country(country: str, year: int, jrc_dir: Path | str) -> pd.DataFra
 
 
 def _production_by_activity(production: pd.DataFrame) -> pd.DataFrame:
-    return production.groupby(
-        ["country", "sector", "activity"], as_index=False
-    )["production"].sum()
+    return production.groupby(["country", "sector", "activity"], as_index=False)[
+        "production"
+    ].sum()
 
 
 def infer_non_eu_demand(
@@ -305,9 +303,7 @@ def infer_non_eu_demand(
 
     frames = []
     for country in non_eu:
-        p = prod.loc[
-            prod["country"].eq(country), ["sector", "activity", "production"]
-        ]
+        p = prod.loc[prod["country"].eq(country), ["sector", "activity", "production"]]
         if p.empty:
             continue
         inferred = eu_energy.merge(p, on=["sector", "activity"], how="inner")
@@ -341,8 +337,7 @@ def _production_lookup(production: pd.DataFrame) -> pd.DataFrame:
 
 
 def _derive_hvc_ued(
-    original_basic: pd.DataFrame,
-    calibrated_basic: pd.DataFrame,
+    original_basic: pd.DataFrame, calibrated_basic: pd.DataFrame
 ) -> pd.DataFrame:
     """Rescale Basic-chemicals UED using original JRC process efficiencies.
 
@@ -406,7 +401,10 @@ def _derive_hvc_ued(
         out["ued_original"] > 0, out["demand"] / out["ued_original"], 0.0
     )
     out = out.merge(
-        hvc_tot[group_cols + ["ued_hvc"]], on=group_cols, how="left", validate="many_to_one"
+        hvc_tot[group_cols + ["ued_hvc"]],
+        on=group_cols,
+        how="left",
+        validate="many_to_one",
     )
     out["ued_hvc"] = out["ued_hvc"].fillna(0.0)
     out["demand"] = out["ued_share"] * out["ued_hvc"]
@@ -415,9 +413,7 @@ def _derive_hvc_ued(
 
 
 def calibrate_basic_chemicals(
-    demand: pd.DataFrame,
-    production: pd.DataFrame,
-    calibration: dict,
+    demand: pd.DataFrame, production: pd.DataFrame, calibration: dict
 ) -> pd.DataFrame:
     """Split JRC Basic chemicals while preserving FEC/UED process structure."""
     if demand.empty:
@@ -460,9 +456,7 @@ def calibrate_basic_chemicals(
 
         for carrier, deduction in deductions.items():
             idx = (
-                basic["country"].eq(country)
-                & fec_energy
-                & basic["carrier"].eq(carrier)
+                basic["country"].eq(country) & fec_energy & basic["carrier"].eq(carrier)
             )
             if not idx.any() or abs(deduction) < 1e-15:
                 continue
@@ -477,7 +471,9 @@ def calibrate_basic_chemicals(
             shares = basic.loc[idx, "demand"] / total
             basic.loc[idx, "demand"] = basic.loc[idx, "demand"] - shares * deduction
 
-        def add(activity: str, carrier: str, value: float, use_type: str = "final_energy"):
+        def add(
+            activity: str, carrier: str, value: float, use_type: str = "final_energy"
+        ):
             if abs(value) < 1e-15:
                 return
             schema = CHEMICAL_SCHEMA[activity]
@@ -517,12 +513,31 @@ def calibrate_basic_chemicals(
         add("Chlorine", "HYDROGEN", chlorine * calibration["MWh_H2_per_tCl"])
         add("Methanol", "ELEC", methanol * calibration["MWh_elec_per_tMeOH"])
         # Methanol natural-gas input is treated as feedstock/non-energy use.
-        add("Methanol", "NG_BIOGAS", methanol * calibration["MWh_CH4_per_tMeOH"], "feedstock")
+        add(
+            "Methanol",
+            "NG_BIOGAS",
+            methanol * calibration["MWh_CH4_per_tMeOH"],
+            "feedstock",
+        )
         if calibration.get("ammonia", True):
-            add("Ammonia", "AMMONIA", ammonia * calibration["MWh_NH3_per_tNH3"], "feedstock")
+            add(
+                "Ammonia",
+                "AMMONIA",
+                ammonia * calibration["MWh_NH3_per_tNH3"],
+                "feedstock",
+            )
         else:
-            add("Ammonia", "ELEC", ammonia * calibration["MWh_elec_per_tNH3_electrolysis"])
-            add("Ammonia", "HYDROGEN", ammonia * calibration["MWh_H2_per_tNH3_electrolysis"], "feedstock")
+            add(
+                "Ammonia",
+                "ELEC",
+                ammonia * calibration["MWh_elec_per_tNH3_electrolysis"],
+            )
+            add(
+                "Ammonia",
+                "HYDROGEN",
+                ammonia * calibration["MWh_H2_per_tNH3_electrolysis"],
+                "feedstock",
+            )
 
     # Reconstruct HVC UED using JRC process efficiencies after the FEC deduction.
     hvc_ued = _derive_hvc_ued(original_basic, basic)
@@ -530,10 +545,7 @@ def calibrate_basic_chemicals(
     # Keep UED feedstock rows copied from FEC unchanged (UED=FEC), but rename
     # their activity to HVC together with the calibrated FEC residual.
     basic_no_ued_energy = basic.loc[
-        ~(
-            basic["energy_layer"].eq("UED")
-            & basic["use_type"].eq("final_energy")
-        )
+        ~(basic["energy_layer"].eq("UED") & basic["use_type"].eq("final_energy"))
     ].copy()
     basic = pd.concat([basic_no_ued_energy, hvc_ued], ignore_index=True)
     basic["activity"] = "HVC"
@@ -550,10 +562,7 @@ def calibrate_basic_chemicals(
 
 
 def add_coke_ovens(
-    demand: pd.DataFrame,
-    coke_path: Path,
-    year: int,
-    factor: float,
+    demand: pd.DataFrame, coke_path: Path, year: int, factor: float
 ) -> pd.DataFrame:
     """Append Eurostat coke-oven FEC as an explicit BF-BOF process."""
     if not coke_path.exists():
