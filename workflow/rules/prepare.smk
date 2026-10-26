@@ -3,9 +3,9 @@
 
 rule prepare_all:
     input:
-        "results/historical/production.csv",
-        "results/historical/production_aggregated.csv",
-        "results/historical/energy_demand.csv",
+        "results/historical/production.parquet",
+        "results/historical/production_aggregated.parquet",
+        "results/historical/energy_demand.parquet",
     output:
         touch("results/historical/.prepare_complete"),
     conda:
@@ -16,7 +16,7 @@ rule prepare_ammonia_production:
     input:
         usgs="resources/automatic/ammonia/usgs.xlsx",
     output:
-        "resources/automatic/prepare/ammonia_production.csv",
+        "resources/automatic/prepare/ammonia_production.parquet",
     log:
         "logs/prepare/prepare_ammonia_production.log",
     conda:
@@ -34,7 +34,7 @@ rule prepare_coke_transformation:
     input:
         eurostat_dir="resources/automatic/eurostat",
     output:
-        "resources/automatic/prepare/coke_transformation.csv",
+        "resources/automatic/prepare/coke_transformation.parquet",
     log:
         "logs/prepare/prepare_coke_transformation.log",
     conda:
@@ -58,8 +58,8 @@ rule prepare_current_production:
         ch_industrial_production="resources/automatic/CHE_industry.csv",
         ammonia_production=rules.prepare_ammonia_production.output,
     output:
-        production="results/historical/production.csv",
-        aggregated="results/historical/production_aggregated.csv",
+        production="results/historical/production.parquet",
+        aggregated="results/historical/production_aggregated.parquet",
     log:
         "logs/prepare/prepare_current_production.log",
     conda:
@@ -84,7 +84,7 @@ rule prepare_current_energy_demand:
         production=rules.prepare_current_production.output.production,
         coke=rules.prepare_coke_transformation.output,
     output:
-        "results/historical/energy_demand.csv",
+        "results/historical/energy_demand.parquet",
     log:
         "logs/prepare/prepare_current_energy_demand.log",
     conda:

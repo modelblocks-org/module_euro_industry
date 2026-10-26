@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import country_converter as coco
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -38,7 +39,7 @@ def spatial_category(sector: str, commodity: str) -> str:
 def read_regions(
     path: str, region_id_column: str, country_column: str | None
 ) -> gpd.GeoDataFrame:
-    regions = gpd.read_file(path)
+    regions = gpd.read_parquet(path)
     if region_id_column not in regions.columns:
         raise ValueError(f"Region id column '{region_id_column}' not found in {path}.")
 
@@ -48,16 +49,23 @@ def read_regions(
     if country_column:
         if country_column not in regions.columns:
             raise ValueError(f"Country column '{country_column}' not found in {path}.")
-        regions["country"] = regions[country_column].astype(str).str.upper()
+        countries = regions[country_column].astype(str).str.upper()
+        unique_countries = countries.unique().tolist()
+        converter = coco.CountryConverter()
+        country_codes = {
+            country: converter.convert(country, to="ISO2")
+            for country in unique_countries
+        }
+        regions["country"] = countries.map(country_codes)
     else:
         regions["country"] = regions["region"].str[:2].str.upper()
 
     if regions["region"].duplicated().any():
         dup = regions.loc[regions["region"].duplicated(), "region"].tolist()
-        raise ValueError(f"Duplicate region identifiers in GeoJSON: {dup[:10]}")
+        raise ValueError(f"Duplicate region identifiers in GeoParquet: {dup[:10]}")
 
     if regions.crs is None:
-        raise ValueError("The user GeoJSON has no CRS. Please provide a valid CRS.")
+        raise ValueError("The user GeoParquet has no CRS. Please provide a valid CRS.")
 
     return regions[["region", "country", "geometry"]].to_crs("EPSG:4326")
 
@@ -126,7 +134,7 @@ def read_generic_key(path: str, cfg: dict, default_source_name: str) -> pd.DataF
 
     Expected columns are configured through region_column, country_column and
     weight_column. The weights do not have to be normalized; normalization is
-    performed after restricting to regions in the supplied GeoJSON.
+    performed after restricting to regions in the supplied GeoParquet.
     """
     df = pd.read_csv(path, low_memory=False)
     region_col = cfg.get("region_column", "name")
@@ -347,7 +355,7 @@ def main() -> None:
     )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    keys.to_csv(args.output, index=False)
+    keys.to_parquet(args.output, index=False)
 
 
 if __name__ == "__main__":

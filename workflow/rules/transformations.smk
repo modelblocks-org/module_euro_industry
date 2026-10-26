@@ -6,14 +6,14 @@ scenario_file = config["scenario_file"]
 
 rule transform_industrial_demand:
     input:
-        projected_production="results/projections/production.csv",
-        historical_production="results/historical/production.csv",
-        historical_energy="results/historical/energy_demand.csv",
+        projected_production="results/projections/production.parquet",
+        historical_production="results/historical/production.parquet",
+        historical_energy="results/historical/energy_demand.parquet",
         technologies=technologies_file,
         scenario=scenario_file,
     output:
-        demand="results/demand/industrial_energy_demand.csv",
-        route_production="results/demand/route_production.csv",
+        demand="results/demand/industrial_energy_demand.parquet",
+        route_production="results/demand/route_production.parquet",
     log:
         "logs/demand/transform_industrial_demand.log",
     conda:

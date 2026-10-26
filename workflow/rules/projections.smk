@@ -3,10 +3,10 @@ scenario_file = config["scenario_file"]
 
 rule project_production:
     input:
-        reference_production="results/historical/production_aggregated.csv",
+        reference_production="results/historical/production_aggregated.parquet",
         scenario=scenario_file,
     output:
-        "results/projections/production.csv",
+        "results/projections/production.parquet",
     log:
         "logs/projections/project_production.log",
     conda:

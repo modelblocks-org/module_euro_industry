@@ -91,7 +91,7 @@ def prepare_coke_transformation(
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    coke.to_csv(output_path)
+    coke.to_parquet(output_path)
 
 
 if __name__ == "__main__":

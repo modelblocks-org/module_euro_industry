@@ -23,9 +23,9 @@ maps_output_dir = spatial_maps_cfg.get(
 
 rule plot_results:
     input:
-        projected_production="results/projections/production.csv",
-        route_production="results/demand/route_production.csv",
-        energy_demand="results/demand/industrial_energy_demand.csv",
+        projected_production="results/projections/production.parquet",
+        route_production="results/demand/route_production.parquet",
+        energy_demand="results/demand/industrial_energy_demand.parquet",
         visualization_config="config/visualization.yaml",
     output:
         touch(f"{plots_output_dir}/.plots_complete"),
@@ -45,8 +45,8 @@ rule plot_results:
 rule plot_spatial_maps:
     input:
         regions=lambda wc: config["spatial_disaggregation"]["regions_file"],
-        route_production="results/spatial/route_production.csv",
-        energy_demand="results/spatial/industrial_energy_demand.csv",
+        route_production="results/spatial/route_production.parquet",
+        energy_demand="results/spatial/industrial_energy_demand.parquet",
         visualization_config="config/visualization.yaml",
         model_config="config/config.yaml",
     output:

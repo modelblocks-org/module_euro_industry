@@ -14,7 +14,7 @@ def attach_category(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()
 
-    # route_production.csv may not carry the historical JRC sector code.
+    # route_production.parquet may not carry the historical JRC sector code.
     # Use commodity-first mappings where they are unambiguous, otherwise
     # fall back to the sector code when it is available.
     commodity_map = {
@@ -55,10 +55,10 @@ def attach_category(df: pd.DataFrame) -> pd.DataFrame:
 def _restrict_to_spatial_scope(
     df: pd.DataFrame, distribution_keys: pd.DataFrame
 ) -> pd.DataFrame:
-    """Keep only countries represented in the user's regional GeoJSON.
+    """Keep only countries represented in the user's regional GeoParquet.
 
     The distribution-key table is built exclusively from regions in the
-    user-provided GeoJSON. A national model may contain additional countries.
+    user-provided GeoParquet. A national model may contain additional countries.
     Those countries are outside the spatial scope and are therefore omitted
     rather than assigned invented regions.
     """
@@ -83,7 +83,7 @@ def _restrict_to_spatial_scope(
         print(
             "Spatial disaggregation: skipping "
             f"{n_omitted} rows for countries not represented in the "
-            "user GeoJSON: " + ", ".join(omitted_countries)
+            "user GeoParquet: " + ", ".join(omitted_countries)
         )
         out = out.loc[~omitted_mask].copy()
 
@@ -129,7 +129,7 @@ def disaggregate(
         validate="many_to_many",
     )
 
-    # At this point every remaining country is represented in the GeoJSON.
+    # At this point every remaining country is represented in the GeoParquet.
     # Missing keys therefore indicate an actual category/key construction issue
     # and should remain a hard error.
     missing = merged.loc[
@@ -137,7 +137,7 @@ def disaggregate(
     ].drop_duplicates()
     if not missing.empty:
         raise ValueError(
-            "Missing spatial keys for countries that are present in the GeoJSON:\n"
+            "Missing spatial keys for countries that are present in the GeoParquet:\n"
             + missing.to_string(index=False)
         )
 
@@ -172,11 +172,8 @@ def main() -> None:
     else:
         print("Spatial disaggregation: no year filter configured; keeping all years.")
 
-    # The detailed historical/future demand table deliberately contains mixed
-    # metadata types in fields such as source_unit and Code. low_memory=False
-    # prevents pandas' chunk-wise dtype inference warning while preserving them.
-    df = pd.read_csv(args.input, low_memory=False)
-    distribution_keys = pd.read_csv(args.keys, low_memory=False)
+    df = pd.read_parquet(args.input)
+    distribution_keys = pd.read_parquet(args.keys)
 
     if args.value_column not in df.columns:
         raise ValueError(
@@ -185,7 +182,7 @@ def main() -> None:
 
     out = disaggregate(df, distribution_keys, args.value_column, years=years)
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    out.to_csv(args.output, index=False)
+    out.to_parquet(args.output, index=False)
 
 
 if __name__ == "__main__":

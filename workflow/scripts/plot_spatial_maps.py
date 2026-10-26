@@ -60,10 +60,10 @@ def _normalise_region_column(
 
 
 def _prepare_regions(path: str, cfg: dict) -> gpd.GeoDataFrame:
-    regions = gpd.read_file(path)
+    regions = gpd.read_parquet(path)
     region_col = cfg.get("spatial_disaggregation", {}).get("region_id_column", "name")
     if region_col not in regions.columns:
-        raise ValueError(f"GeoJSON region id column '{region_col}' not found.")
+        raise ValueError(f"GeoParquet region id column '{region_col}' not found.")
     regions = regions.copy()
     regions["region"] = regions[region_col].astype(str)
     if regions.crs is None:
@@ -445,12 +445,12 @@ def main() -> None:
     )
 
     route_prod = _normalise_region_column(
-        pd.read_csv(args.route_production, low_memory=False),
+        pd.read_parquet(args.route_production),
         configured_region_col,
         "route production",
     )
     energy = _normalise_region_column(
-        pd.read_csv(args.energy_demand, low_memory=False),
+        pd.read_parquet(args.energy_demand),
         configured_region_col,
         "energy demand",
     )

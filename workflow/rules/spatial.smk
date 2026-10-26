@@ -21,7 +21,7 @@ rule build_industrial_distribution_keys:
     input:
         **spatial_key_inputs,
     output:
-        "results/spatial/industrial_distribution_keys.csv",
+        "results/spatial/industrial_distribution_keys.parquet",
     log:
         "logs/spatial/build_industrial_distribution_keys.log",
     conda:
@@ -44,11 +44,11 @@ rule build_industrial_distribution_keys:
 
 rule disaggregate_industrial_energy_demand:
     input:
-        demand="results/demand/industrial_energy_demand.csv",
+        demand="results/demand/industrial_energy_demand.parquet",
         distribution_keys=rules.build_industrial_distribution_keys.output,
         config="config/config.yaml",
     output:
-        "results/spatial/industrial_energy_demand.csv",
+        "results/spatial/industrial_energy_demand.parquet",
     log:
         "logs/spatial/disaggregate_industrial_energy_demand.log",
     conda:
@@ -67,11 +67,11 @@ rule disaggregate_industrial_energy_demand:
 
 rule disaggregate_route_production:
     input:
-        production="results/demand/route_production.csv",
+        production="results/demand/route_production.parquet",
         distribution_keys=rules.build_industrial_distribution_keys.output,
         config="config/config.yaml",
     output:
-        "results/spatial/route_production.csv",
+        "results/spatial/route_production.parquet",
     log:
         "logs/spatial/disaggregate_route_production.log",
     conda:

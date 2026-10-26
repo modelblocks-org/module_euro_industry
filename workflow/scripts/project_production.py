@@ -217,7 +217,7 @@ def project_production(
     projection_cfg = scenario.get("production_projection", {})
     reference_year = int(historical["reference_year"])
 
-    reference = pd.read_csv(reference_path)
+    reference = pd.read_parquet(reference_path)
     missing = REQUIRED_REFERENCE_COLUMNS - set(reference.columns)
     if missing:
         raise ValueError(
@@ -311,7 +311,7 @@ def project_production(
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    projected.to_csv(output_path, index=False, float_format="%.6f")
+    projected.to_parquet(output_path, index=False)
     return projected
 
 

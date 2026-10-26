@@ -745,9 +745,9 @@ def transform_demand(
     transformations = scenario.get("process_transformations", []) or []
     route_shares = scenario.get("route_shares", {}) or {}
 
-    projected = pd.read_csv(projected_production_path)
-    hist_prod = pd.read_csv(historical_production_path)
-    hist_energy = pd.read_csv(historical_energy_path)
+    projected = pd.read_parquet(projected_production_path)
+    hist_prod = pd.read_parquet(historical_production_path)
+    hist_energy = pd.read_parquet(historical_energy_path)
 
     route_production = build_route_production(
         projected, hist_prod, reference_year, route_shares
@@ -816,10 +816,8 @@ def transform_demand(
     output_route_production_path = Path(output_route_production_path)
     output_demand_path.parent.mkdir(parents=True, exist_ok=True)
     output_route_production_path.parent.mkdir(parents=True, exist_ok=True)
-    demand.to_csv(output_demand_path, index=False, float_format="%.8f")
-    route_production.to_csv(
-        output_route_production_path, index=False, float_format="%.8f"
-    )
+    demand.to_parquet(output_demand_path, index=False)
+    route_production.to_parquet(output_route_production_path, index=False)
     return demand, route_production
 
 

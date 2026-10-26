@@ -182,7 +182,7 @@ def split_basic_chemicals(
     basic = production.loc[mask].copy().set_index("country")
     other = production.loc[~mask].copy()
 
-    ammonia = pd.read_csv(ammonia_path, index_col=0)
+    ammonia = pd.read_parquet(ammonia_path)
     year_to_use = min(max(year, 2018), 2022)
     ammonia_series = pd.Series(0.0, index=basic.index)
     available = ammonia.index.intersection(basic.index)
@@ -271,12 +271,12 @@ def prepare_current_production(
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    production.to_csv(output_path, index=False, float_format="%.6f")
+    production.to_parquet(output_path, index=False)
 
     aggregated = aggregate_commodities(production)
     aggregate_path = Path(aggregate_path)
     aggregate_path.parent.mkdir(parents=True, exist_ok=True)
-    aggregated.to_csv(aggregate_path, index=False, float_format="%.6f")
+    aggregated.to_parquet(aggregate_path, index=False)
 
 
 def load_config(path):
