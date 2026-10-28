@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from _industry_schema import (
-    CHEMICAL_SCHEMA,
+    CHEMICAL_DEFINITIONS,
     COKE_CARRIERS,
     JRC_CODE_COLUMNS,
     JRC_INDUSTRY_SHEETS,
@@ -154,10 +154,10 @@ def read_jrc_energy_sheet(
         axis=1,
     )
     data["sector"] = data["sector"].fillna(sector)
-    data["sector_name"] = meta.map(lambda x: x["sector_name"])
-    data["activity"] = meta.map(lambda x: x["activity"])
-    data["commodity"] = meta.map(lambda x: x["commodity"])
-    data["production_route"] = meta.map(lambda x: x["production_route"])
+    data["sector_name"] = meta.map(lambda x: x.sector_name)
+    data["activity"] = meta.map(lambda x: x.activity)
+    data["commodity"] = meta.map(lambda x: x.commodity)
+    data["production_route"] = meta.map(lambda x: x.production_route)
 
     # JRC Industry energy sheets are expressed in ktoe. Keep source value/unit
     # and provide a common TWh/a value for downstream calculations.
@@ -476,15 +476,15 @@ def calibrate_basic_chemicals(
         ):
             if abs(value) < 1e-15:
                 return
-            schema = CHEMICAL_SCHEMA[activity]
+            definition = CHEMICAL_DEFINITIONS[activity]
             additions.append(
                 dict(
                     country=country,
                     sector="CHI",
                     sector_name=SECTOR_NAMES["CHI"],
                     activity=activity,
-                    commodity=schema["commodity"],
-                    production_route=schema["production_route"],
+                    commodity=definition.commodity,
+                    production_route=definition.production_route,
                     process="CALIBRATED",
                     technology="CALIBRATED",
                     carrier=carrier,
@@ -549,7 +549,7 @@ def calibrate_basic_chemicals(
     ].copy()
     basic = pd.concat([basic_no_ued_energy, hvc_ued], ignore_index=True)
     basic["activity"] = "HVC"
-    basic["commodity"] = CHEMICAL_SCHEMA["HVC"]["commodity"]
+    basic["commodity"] = CHEMICAL_DEFINITIONS["HVC"].commodity
     basic["production_route"] = "BASE_ROUTE"
     basic["subsector"] = "HVC"
     basic["source"] = basic["source"].astype(str) + "+historical_calibration"

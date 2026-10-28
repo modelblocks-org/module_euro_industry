@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from _industry_schema import (
-    CHEMICAL_SCHEMA,
+    CHEMICAL_DEFINITIONS,
     JRC_INDUSTRY_SHEETS,
     JRC_NAMES,
     PRODUCTION_DEFINITIONS,
@@ -123,7 +123,7 @@ def read_sector(country: str, sector: str, year: int, jrc_dir: Path) -> list[dic
 
     records = []
     for definition in PRODUCTION_DEFINITIONS[sector]:
-        field = definition["source_field"]
+        field = definition.source_field
         if field not in physical_output.index:
             raise ValueError(
                 f"Could not find JRC production field '{field}' in {sector}/{country}."
@@ -132,13 +132,13 @@ def read_sector(country: str, sector: str, year: int, jrc_dir: Path) -> list[dic
             {
                 "sector": sector,
                 "sector_name": SECTOR_NAMES[sector],
-                "activity": definition["activity"],
-                "commodity": definition["commodity"],
-                "production_route": definition["production_route"],
+                "activity": definition.activity,
+                "commodity": definition.commodity,
+                "production_route": definition.production_route,
                 "production": pd.to_numeric(
                     physical_output.loc[field], errors="coerce"
                 ),
-                "unit": definition["unit"],
+                "unit": definition.unit,
                 "source": "JRC-IDEES-2021",
                 "source_field": field,
             }
@@ -208,18 +208,18 @@ def split_basic_chemicals(
 
     records = []
     for activity, values in calibrated.items():
-        schema = CHEMICAL_SCHEMA[activity]
+        definition = CHEMICAL_DEFINITIONS[activity]
         for country, value in values.items():
             records.append(
                 {
                     "country": country,
-                    "sector": schema["sector"],
-                    "sector_name": schema["sector_name"],
+                    "sector": definition.sector,
+                    "sector_name": definition.sector_name,
                     "activity": activity,
-                    "commodity": schema["commodity"],
-                    "production_route": schema["production_route"],
+                    "commodity": definition.commodity,
+                    "production_route": definition.production_route,
                     "production": value,
-                    "unit": schema["unit"],
+                    "unit": definition.unit,
                     "source": "USGS"
                     if activity == "Ammonia"
                     else "historical_calibration",

@@ -1,12 +1,51 @@
 """Shared historical-industry schema for JRC-IDEES.
 
-The historical representation deliberately stays close to the JRC-IDEES
-Industry workbooks. Raw JRC codes are preserved in the output; canonical
-``activity``, ``commodity`` and ``production_route`` fields are only added to
+The historical representation deliberately stays close to the JRC-IDEES Industry workbooks.
+Raw JRC codes are preserved in the output.
+The canonical ``activity``, ``commodity`` and ``production_route`` fields are only added to
 make later route/process substitutions easier.
 """
 
 from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict
+
+
+class ActivityMetadata(BaseModel):
+    """Canonical activity labels shared by production and energy demand schemas."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    activity: str
+    commodity: str
+    production_route: str = "BASE_ROUTE"
+
+
+class ProductionDefinition(ActivityMetadata):
+    """Physical-output field and optional energy-sheet subsector in JRC."""
+
+    source_field: str
+    unit: str
+    jrc_subsector: str | None = None
+
+
+class ChemicalDefinition(ActivityMetadata):
+    """Metadata for a calibrated chemical activity."""
+
+    sector: str = "CHI"
+    unit: str = "kt/a"
+
+    @property
+    def sector_name(self) -> str:
+        """Look up the sector name without repeating it in each definition."""
+        return SECTOR_NAMES[self.sector]
+
+
+class SubsectorMetadata(ActivityMetadata):
+    """Canonical labels resolved from a raw JRC sector and subsector."""
+
+    sector_name: str
+
 
 SECTOR_NAMES = {
     "ISI": "Iron and steel",
@@ -39,173 +78,171 @@ JRC_CODE_COLUMNS = [
 ]
 
 # Physical-output rows used from the JRC Industry workbooks.
-PRODUCTION_DEFINITIONS = {
+PRODUCTION_DEFINITIONS: dict[str, list[ProductionDefinition]] = {
     "ISI": [
-        dict(
+        ProductionDefinition(
             activity="Integrated steelworks",
             source_field="Integrated steelworks",
             commodity="STEEL",
             production_route="BF_BOF",
             unit="kt/a",
+            jrc_subsector="BF_BOF",
         ),
-        dict(
+        ProductionDefinition(
             activity="Electric arc",
             source_field="Electric arc",
             commodity="STEEL",
             production_route="EAF",
             unit="kt/a",
+            jrc_subsector="EAF",
         ),
     ],
     "CHI": [
-        dict(
+        ProductionDefinition(
             activity="Basic chemicals",
             source_field="Basic chemicals (kt ethylene eq.)",
             commodity="BASIC_CHEMICALS",
-            production_route="BASE_ROUTE",
             unit="kt ethylene eq./a",
+            jrc_subsector="BASIC_CHEM",
         ),
-        dict(
+        ProductionDefinition(
             activity="Other chemicals",
             source_field="Other chemicals (kt ethylene eq.)",
             commodity="OTHER_CHEMICALS",
-            production_route="BASE_ROUTE",
             unit="kt ethylene eq./a",
+            jrc_subsector="OTHER_CHEM",
         ),
-        dict(
+        ProductionDefinition(
             activity="Pharmaceutical products etc.",
             source_field="Pharmaceutical products etc. (kt ethylene eq.)",
             commodity="PHARMACEUTICALS",
-            production_route="BASE_ROUTE",
             unit="kt ethylene eq./a",
+            jrc_subsector="PHARMA",
         ),
     ],
     "NMM": [
-        dict(
+        ProductionDefinition(
             activity="Cement",
             source_field="Cement (kt)",
             commodity="CEMENT",
-            production_route="BASE_ROUTE",
             unit="kt/a",
+            jrc_subsector="CEM",
         ),
-        dict(
+        ProductionDefinition(
             activity="Ceramics & other NMM",
             source_field="Ceramics & other NMM (kt bricks eq.)",
             commodity="CERAMICS",
-            production_route="BASE_ROUTE",
             unit="kt bricks eq./a",
+            jrc_subsector="CER",
         ),
-        dict(
+        ProductionDefinition(
             activity="Glass production",
             source_field="Glass production  (kt)",
             commodity="GLASS",
-            production_route="BASE_ROUTE",
             unit="kt/a",
+            jrc_subsector="GLASS",
         ),
     ],
     "PPA": [
-        dict(
+        ProductionDefinition(
             activity="Pulp production",
             source_field="Pulp production (kt)",
             commodity="PULP",
-            production_route="BASE_ROUTE",
             unit="kt/a",
+            jrc_subsector="PULP",
         ),
-        dict(
+        ProductionDefinition(
             activity="Paper production",
             source_field="Paper production  (kt)",
             commodity="PAPER",
-            production_route="BASE_ROUTE",
             unit="kt/a",
+            jrc_subsector="PAPER",
         ),
-        dict(
+        ProductionDefinition(
             activity="Printing and media reproduction",
             source_field="Printing and media reproduction (kt paper eq.)",
             commodity="PRINTING",
-            production_route="BASE_ROUTE",
             unit="kt paper eq./a",
+            jrc_subsector="PRINT",
         ),
     ],
     "FBT": [
-        dict(
+        ProductionDefinition(
             activity="Food, beverages and tobacco",
             source_field="Physical output (index)",
             commodity="FBT",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
     "NFM": [
-        dict(
+        ProductionDefinition(
             activity="Alumina production",
             source_field="Alumina production (kt)",
             commodity="ALUMINA",
-            production_route="BASE_ROUTE",
             unit="kt/a",
+            jrc_subsector="ALUMINA",
         ),
-        dict(
+        ProductionDefinition(
             activity="Aluminium - primary production",
             source_field="Aluminium - primary production",
             commodity="ALUMINIUM",
             production_route="PRIM_ALU",
             unit="kt/a",
+            jrc_subsector="PRIM_ALU",
         ),
-        dict(
+        ProductionDefinition(
             activity="Aluminium - secondary production",
             source_field="Aluminium - secondary production",
             commodity="ALUMINIUM",
             production_route="SEC_ALU",
             unit="kt/a",
+            jrc_subsector="SEC_ALU",
         ),
-        dict(
+        ProductionDefinition(
             activity="Other non-ferrous metals",
             source_field="Other non-ferrous metals (kt lead eq.)",
             commodity="OTHER_NFM",
-            production_route="BASE_ROUTE",
             unit="kt lead eq./a",
+            jrc_subsector="OTHER_NFM",
         ),
     ],
     "TRE": [
-        dict(
+        ProductionDefinition(
             activity="Transport equipment",
             source_field="Physical output (index)",
             commodity="TRE",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
     "MAE": [
-        dict(
+        ProductionDefinition(
             activity="Machinery equipment",
             source_field="Physical output (index)",
             commodity="MAE",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
     "TEL": [
-        dict(
+        ProductionDefinition(
             activity="Textiles and leather",
             source_field="Physical output (index)",
             commodity="TEL",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
     "WWP": [
-        dict(
+        ProductionDefinition(
             activity="Wood and wood products",
             source_field="Physical output (index)",
             commodity="WWP",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
     "OIS": [
-        dict(
+        ProductionDefinition(
             activity="Other industrial sectors",
             source_field="Physical output (index)",
             commodity="OIS",
-            production_route="BASE_ROUTE",
             unit="index",
         )
     ],
@@ -213,70 +250,11 @@ PRODUCTION_DEFINITIONS = {
 
 # Known JRC subsector codes used in the Industry workbook. Unknown codes are
 # preserved rather than discarded; see ``schema_for_jrc_subsector`` below.
-JRC_SUBSECTOR_SCHEMA = {
-    ("ISI", "BF_BOF"): dict(
-        activity="Integrated steelworks", commodity="STEEL", production_route="BF_BOF"
-    ),
-    ("ISI", "EAF"): dict(
-        activity="Electric arc", commodity="STEEL", production_route="EAF"
-    ),
-    ("CHI", "BASIC_CHEM"): dict(
-        activity="Basic chemicals",
-        commodity="BASIC_CHEMICALS",
-        production_route="BASE_ROUTE",
-    ),
-    ("CHI", "OTHER_CHEM"): dict(
-        activity="Other chemicals",
-        commodity="OTHER_CHEMICALS",
-        production_route="BASE_ROUTE",
-    ),
-    ("CHI", "PHARMA"): dict(
-        activity="Pharmaceutical products etc.",
-        commodity="PHARMACEUTICALS",
-        production_route="BASE_ROUTE",
-    ),
-    ("NMM", "CEM"): dict(
-        activity="Cement", commodity="CEMENT", production_route="BASE_ROUTE"
-    ),
-    ("NMM", "CER"): dict(
-        activity="Ceramics & other NMM",
-        commodity="CERAMICS",
-        production_route="BASE_ROUTE",
-    ),
-    ("NMM", "GLASS"): dict(
-        activity="Glass production", commodity="GLASS", production_route="BASE_ROUTE"
-    ),
-    ("PPA", "PULP"): dict(
-        activity="Pulp production", commodity="PULP", production_route="BASE_ROUTE"
-    ),
-    ("PPA", "PAPER"): dict(
-        activity="Paper production", commodity="PAPER", production_route="BASE_ROUTE"
-    ),
-    ("PPA", "PRINT"): dict(
-        activity="Printing and media reproduction",
-        commodity="PRINTING",
-        production_route="BASE_ROUTE",
-    ),
-    ("NFM", "ALUMINA"): dict(
-        activity="Alumina production",
-        commodity="ALUMINA",
-        production_route="BASE_ROUTE",
-    ),
-    ("NFM", "PRIM_ALU"): dict(
-        activity="Aluminium - primary production",
-        commodity="ALUMINIUM",
-        production_route="PRIM_ALU",
-    ),
-    ("NFM", "SEC_ALU"): dict(
-        activity="Aluminium - secondary production",
-        commodity="ALUMINIUM",
-        production_route="SEC_ALU",
-    ),
-    ("NFM", "OTHER_NFM"): dict(
-        activity="Other non-ferrous metals",
-        commodity="OTHER_NFM",
-        production_route="BASE_ROUTE",
-    ),
+JRC_SUBSECTOR_LOOKUP: dict[tuple[str, str], ProductionDefinition] = {
+    (sector, definition.jrc_subsector): definition
+    for sector, definitions in PRODUCTION_DEFINITIONS.items()
+    for definition in definitions
+    if definition.jrc_subsector is not None
 }
 
 # Process normalization developed in the earlier test model. The raw JRC
@@ -321,35 +299,14 @@ PROCESS_MAPPING = {
     "PAPER_MACHINE_ELEC": "PAPER_MACHINE",
 }
 
-CHEMICAL_SCHEMA = {
-    "Ammonia": dict(
-        sector="CHI",
-        sector_name=SECTOR_NAMES["CHI"],
-        commodity="AMMONIA",
-        production_route="BASE_ROUTE",
-        unit="kt/a",
-    ),
-    "HVC": dict(
-        sector="CHI",
-        sector_name=SECTOR_NAMES["CHI"],
-        commodity="HVC",
-        production_route="BASE_ROUTE",
-        unit="kt/a",
-    ),
-    "Chlorine": dict(
-        sector="CHI",
-        sector_name=SECTOR_NAMES["CHI"],
-        commodity="CHLORINE",
-        production_route="BASE_ROUTE",
-        unit="kt/a",
-    ),
-    "Methanol": dict(
-        sector="CHI",
-        sector_name=SECTOR_NAMES["CHI"],
-        commodity="METHANOL",
-        production_route="BASE_ROUTE",
-        unit="kt/a",
-    ),
+CHEMICAL_DEFINITIONS: dict[str, ChemicalDefinition] = {
+    definition.activity: definition
+    for definition in (
+        ChemicalDefinition(activity="Ammonia", commodity="AMMONIA"),
+        ChemicalDefinition(activity="HVC", commodity="HVC"),
+        ChemicalDefinition(activity="Chlorine", commodity="CHLORINE"),
+        ChemicalDefinition(activity="Methanol", commodity="METHANOL"),
+    )
 }
 
 # Raw Eurostat product categories retained for the coke-oven add-on. They are
@@ -369,27 +326,26 @@ COKE_CARRIERS = [
 ]
 
 
-def schema_for_jrc_subsector(sector: str, subsector: str | None) -> dict:
+def schema_for_jrc_subsector(sector: str, subsector: str | None) -> SubsectorMetadata:
     """Return canonical metadata while preserving unknown JRC subsectors."""
     subsector = "" if subsector is None else str(subsector)
-    known = JRC_SUBSECTOR_SCHEMA.get((sector, subsector))
-    if known is not None:
-        return {"sector_name": SECTOR_NAMES.get(sector, sector), **known}
+    definition = JRC_SUBSECTOR_LOOKUP.get((sector, subsector))
+    if definition is None:
+        definitions = PRODUCTION_DEFINITIONS.get(sector, [])
+        if len(definitions) == 1:
+            definition = definitions[0]
 
-    definitions = PRODUCTION_DEFINITIONS.get(sector, [])
-    if len(definitions) == 1:
-        d = definitions[0]
-        return {
-            "sector_name": SECTOR_NAMES.get(sector, sector),
-            "activity": d["activity"],
-            "commodity": d["commodity"],
-            "production_route": d["production_route"],
-        }
+    if definition is not None:
+        return SubsectorMetadata(
+            sector_name=SECTOR_NAMES.get(sector, sector),
+            activity=definition.activity,
+            commodity=definition.commodity,
+            production_route=definition.production_route,
+        )
 
     fallback = subsector or sector
-    return {
-        "sector_name": SECTOR_NAMES.get(sector, sector),
-        "activity": fallback,
-        "commodity": fallback,
-        "production_route": "BASE_ROUTE",
-    }
+    return SubsectorMetadata(
+        sector_name=SECTOR_NAMES.get(sector, sector),
+        activity=fallback,
+        commodity=fallback,
+    )

@@ -39,6 +39,12 @@ https://conda.anaconda.org/conda-forge/linux-64/numpy-2.5.4-py312he827f4e_0.cond
 https://conda.anaconda.org/conda-forge/linux-64/markupsafe-3.0.4-py312h8b7ec3f_1.conda#ee4135fc1ce77066d2be65475bcfbbff
 https://conda.anaconda.org/conda-forge/noarch/jinja2-3.1.6-pyhcf101f3_1.conda#04558c96691bed63104678757beb4f8d
 https://conda.anaconda.org/conda-forge/noarch/pydeck-0.9.3-pyhd8ed1ab_0.conda#7c94c948b32d681345f134ae11892fee
+https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.16.0-pyhcf101f3_0.conda#c70ad746c22219b9700931707482992c
+https://conda.anaconda.org/conda-forge/noarch/typing-inspection-0.4.4-pyhcf101f3_0.conda#880e91eac5d926568ef278e20554148e
+https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.16.0-h69aa097_0.conda#c680b5747e8c4c8f23dca0bb7042a8fc
+https://conda.anaconda.org/conda-forge/linux-64/pydantic-core-2.50.1-py312hc767a74_1.conda#c533dc1b0b0b264e4e8022a3abb879cb
+https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.8.0-pyhd8ed1ab_0.conda#108c928d2a8551832dbc762b535e90bb
+https://conda.anaconda.org/conda-forge/noarch/pydantic-2.14.1-pyh5ded981_0.conda#0e25c99148247bf3f89625f06eb18bee
 https://conda.anaconda.org/conda-forge/linux-64/libabseil-20260526.0-cxx17_h0dc7533_3.conda#d224f3a53f55029366c73161f15461fb
 https://conda.anaconda.org/conda-forge/linux-64/libre2-11-2025.11.05-hbb87c76_2.conda#f5ef2e8db8f34d3f96bcdb22db0ca5b2
 https://conda.anaconda.org/conda-forge/linux-64/re2-2025.11.05-hbf548d4_2.conda#cf36abc55d2669b207d8bff73fb05666
