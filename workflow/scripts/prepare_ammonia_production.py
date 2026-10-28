@@ -33,7 +33,7 @@ def prepare_ammonia_production(input_path: str | Path, output_path: str | Path) 
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    ammonia.to_csv(output_path)
+    ammonia.to_parquet(output_path)
 
 
 if __name__ == "__main__":

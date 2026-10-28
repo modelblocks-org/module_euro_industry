@@ -190,10 +190,12 @@ def main(args) -> None:
     commodities = cfg.get("commodities")
 
     projected = _filter_scope(
-        pd.read_csv(args.projected_production), countries, commodities
+        pd.read_parquet(args.projected_production), countries, commodities
     )
-    routes = _filter_scope(pd.read_csv(args.route_production), countries, commodities)
-    demand = _filter_scope(pd.read_csv(args.energy_demand), countries, commodities)
+    routes = _filter_scope(
+        pd.read_parquet(args.route_production), countries, commodities
+    )
+    demand = _filter_scope(pd.read_parquet(args.energy_demand), countries, commodities)
 
     production_cfg = cfg.get("production", {})
     energy_cfg = cfg.get("energy", {})

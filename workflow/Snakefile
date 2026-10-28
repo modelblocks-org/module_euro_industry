@@ -9,9 +9,9 @@ min_version("9.19")
 # This allows users to re-wire how the module is used in their workflow with ease.
 # pathvars:
 #     # User resources
-#     shapes="<resources>/user/{shapes}/shapes.geojson",
+#     shapes="<resources>/user/{shapes}/shapes.parquet",
 #     # Module results
-#     combined_text="<results>/something.csv"
+#     combined_text="<results>/something.parquet"
 
 
 # Load the example configuration. This will be overridden by users.

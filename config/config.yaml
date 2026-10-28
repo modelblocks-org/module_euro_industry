@@ -72,9 +72,9 @@ technologies_file: config/technologies.yaml
 scenario_file: config/scenarios/retain_max_electrification.yaml
 
 spatial_disaggregation:
-  regions_file: resources/user/regions.geojson
-  region_id_column: name
-  country_column: country
+  regions_file: resources/user/shapes.parquet
+  region_id_column: shape_id
+  country_column: country_id
 
   # Optional subset of years to regionalize. Set to null to keep all years.
   years:
@@ -94,7 +94,7 @@ spatial_disaggregation:
   # same country. No additional configuration is required.
 
   # Optional population-based regional key. The weights do not need to sum to
-  # one; they are renormalized to the regions present in the GeoJSON.
+  # one; they are renormalized to the regions present in the GeoParquet.
   population:
     file: resources/user/pop_layout_base_s_60.csv
     region_column: name

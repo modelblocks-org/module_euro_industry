@@ -567,7 +567,7 @@ def add_coke_ovens(
     """Append Eurostat coke-oven FEC as an explicit BF-BOF process."""
     if not coke_path.exists():
         return demand
-    coke = pd.read_csv(coke_path, index_col=[0, 1])
+    coke = pd.read_parquet(coke_path)
     try:
         coke = coke.xs(year, level=1)
     except KeyError:
@@ -628,7 +628,7 @@ def prepare(
 ) -> None:
     year = int(calibration["reference_year"])
     jrc_dir = Path(jrc_dir)
-    production = pd.read_csv(production_path)
+    production = pd.read_parquet(production_path)
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.tolist())
 
     frames = []
@@ -703,7 +703,7 @@ def prepare(
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    demand.to_csv(output_path, index=False, float_format="%.8f")
+    demand.to_parquet(output_path, index=False)
 
 
 def load_config(path: str | Path) -> dict:
