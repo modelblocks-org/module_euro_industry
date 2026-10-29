@@ -1,5 +1,7 @@
 """Rules for automatically downloaded source datasets."""
 
+CURL_ARGS = "--fail --silent --show-error --location --retry 5 --retry-delay 5 --retry-all-errors --continue-at -"
+
 
 rule download_all:
     """Download and extract all external datasets used by the original workflow."""
@@ -29,11 +31,12 @@ rule download_eurostat:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["eurostat"],
     message:
         "Download stable Eurostat energy balances."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_jrc_idees:
@@ -44,11 +47,12 @@ rule download_jrc_idees:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["jrc_idees"],
     message:
         "Download the JRC-IDEES dataset."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_hotmaps:
@@ -59,11 +63,12 @@ rule download_hotmaps:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["hotmaps"],
     message:
         "Download the Hotmaps energy-intensive industry dataset."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_ammonia_usgs:
@@ -74,11 +79,12 @@ rule download_ammonia_usgs:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["ammonia"]["usgs"],
     message:
         "Download the U.S. Geological Survey ammonia dataset."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_ammonia_plants:
@@ -89,11 +95,12 @@ rule download_ammonia_plants:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["ammonia"]["plants"],
     message:
         "Download ammonia plants collected by PyPSA-Eur."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_GEM_SPT:
@@ -104,11 +111,12 @@ rule download_GEM_SPT:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["GEM_SPT"],
     message:
         "Download the Global Energy Monitor Steel Plant Tracker."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_cement_non_eu:
@@ -119,11 +127,12 @@ rule download_cement_non_eu:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["non_eu"]["cement"],
     message:
         "Download non-EU cement plants collected by PyPSA-Eur."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_refineries_non_eu:
@@ -134,11 +143,12 @@ rule download_refineries_non_eu:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["non_eu"]["refineries"],
     message:
         "Download non-EU refineries collected by PyPSA-Eur."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule download_CHE_industry:
@@ -149,11 +159,12 @@ rule download_CHE_industry:
     conda:
         "../envs/module.yaml"
     params:
+        curl_args=CURL_ARGS,
         url=internal["resources"]["automatic"]["CHE_industry"],
     message:
         "Download Swiss industrial production by subsector."
     shell:
-        'python workflow/scripts/download.py --url "{params.url}" --output "{output}" > "{log}" 2>&1'
+        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
 
 
 rule unzip_eurostat:
@@ -167,8 +178,8 @@ rule unzip_eurostat:
         "../envs/module.yaml"
     message:
         "Extract Eurostat energy balances."
-    shell:
-        'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'
+    script:
+        "../scripts/unzip.py"
 
 
 rule unzip_jrc_idees:
@@ -182,5 +193,5 @@ rule unzip_jrc_idees:
         "../envs/module.yaml"
     message:
         "Extract JRC-IDEES."
-    shell:
-        'python workflow/scripts/unzip.py --input "{input}" --output "{output}" > "{log}" 2>&1'
+    script:
+        "../scripts/unzip.py"

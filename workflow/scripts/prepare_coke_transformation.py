@@ -1,8 +1,6 @@
 """Prepare Eurostat coke-oven transformation output used in historical calibration."""
 
-from __future__ import annotations
-
-import argparse
+import sys
 from functools import partial
 from pathlib import Path
 
@@ -94,10 +92,12 @@ def prepare_coke_transformation(
     coke.to_parquet(output_path)
 
 
+def main() -> None:
+    prepare_coke_transformation(
+        snakemake.input.eurostat_dir, snakemake.params.countries, snakemake.output[0]
+    )
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--eurostat-dir", required=True)
-    parser.add_argument("--countries", nargs="+", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-    prepare_coke_transformation(args.eurostat_dir, args.countries, args.output)
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

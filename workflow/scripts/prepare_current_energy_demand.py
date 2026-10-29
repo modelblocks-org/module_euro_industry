@@ -16,9 +16,7 @@ FEC observation is copied into the UED layer. This is equivalent to UED=FEC for
 feedstocks and avoids silently dropping feedstock from efficiency-ready data.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 import warnings
 from pathlib import Path
 
@@ -711,21 +709,18 @@ def load_config(path: str | Path) -> dict:
         return yaml.safe_load(handle)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--jrc-dir", required=True)
-    parser.add_argument("--production", required=True)
-    parser.add_argument("--coke", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-
-    config = load_config(args.config)
+def main() -> None:
+    config = load_config(snakemake.params.config_path)
     prepare(
         countries=config["countries"],
         calibration=config["historical_calibration"],
-        jrc_dir=args.jrc_dir,
-        production_path=args.production,
-        coke_path=args.coke,
-        output_path=args.output,
+        jrc_dir=snakemake.input.jrc_dir,
+        production_path=snakemake.input.production,
+        coke_path=snakemake.input.coke,
+        output_path=snakemake.output[0],
     )
+
+
+if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

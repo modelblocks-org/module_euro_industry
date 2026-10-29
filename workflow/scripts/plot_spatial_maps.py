@@ -1,9 +1,7 @@
-from __future__ import annotations
-
-import argparse
 import colorsys
 import html
 import math
+import sys
 from pathlib import Path
 
 import geopandas as gpd
@@ -424,36 +422,28 @@ def make_production_maps(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--visualization-config", required=True)
-    parser.add_argument("--model-config", required=True)
-    parser.add_argument("--regions", required=True)
-    parser.add_argument("--route-production", required=True)
-    parser.add_argument("--energy-demand", required=True)
-    parser.add_argument("--output-dir", required=True)
-    args = parser.parse_args()
-
-    cfg = _load_cfg(args.visualization_config, args.model_config)
+    cfg = _load_cfg(snakemake.input.visualization_config, snakemake.input.model_config)
     vis = cfg.get("visualization", {}).get("spatial_maps", {})
     if not vis.get("enabled", True):
-        print("Spatial maps disabled.")
         return
 
-    regions = _prepare_regions(args.regions, cfg)
+    regions = _prepare_regions(snakemake.input.regions, cfg)
     configured_region_col = cfg.get("spatial_disaggregation", {}).get(
         "region_id_column"
     )
 
     route_prod = _normalise_region_column(
-        pd.read_parquet(args.route_production),
+        pd.read_parquet(snakemake.input.route_production),
         configured_region_col,
         "route production",
     )
     energy = _normalise_region_column(
-        pd.read_parquet(args.energy_demand), configured_region_col, "energy demand"
+        pd.read_parquet(snakemake.input.energy_demand),
+        configured_region_col,
+        "energy demand",
     )
 
-    outdir = Path(args.output_dir)
+    outdir = Path(snakemake.params.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
     if vis.get("clean_output_dir", True):
         for p in outdir.glob("*.html"):
@@ -474,4 +464,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
     main()

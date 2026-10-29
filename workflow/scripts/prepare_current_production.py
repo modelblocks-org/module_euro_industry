@@ -7,9 +7,7 @@ replaced by the calibrated AMMONIA/HVC/CHLORINE/METHANOL activities used by the
 legacy workflow.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import country_converter as coco
@@ -284,25 +282,20 @@ def load_config(path):
         return yaml.safe_load(handle)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--jrc-dir", required=True)
-    parser.add_argument("--eurostat-dir", required=True)
-    parser.add_argument("--ch-industrial-production", required=True)
-    parser.add_argument("--ammonia-production", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--aggregated-output", required=True)
-    args = parser.parse_args()
-
-    config = load_config(args.config)
+def main() -> None:
+    config = load_config(snakemake.params.config_path)
     prepare_current_production(
         config["countries"],
         config["historical_calibration"],
-        args.jrc_dir,
-        args.eurostat_dir,
-        args.ch_industrial_production,
-        args.ammonia_production,
-        args.output,
-        args.aggregated_output,
+        snakemake.input.jrc_dir,
+        snakemake.input.eurostat_dir,
+        snakemake.input.ch_industrial_production,
+        snakemake.input.ammonia_production,
+        snakemake.output.production,
+        snakemake.output.aggregated,
     )
+
+
+if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

@@ -11,15 +11,10 @@ rule project_production:
         "logs/projections/project_production.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        (
-            "python workflow/scripts/project_production.py "
-            '--reference-production "{input.reference_production}" '
-            '--config "config/config.yaml" '
-            '--scenario "{input.scenario}" '
-            '--output "{output}" '
-            '> "{log}" 2>&1'
-        )
+    params:
+        config_path="config/config.yaml",
+    script:
+        "../scripts/project_production.py"
 
 
 rule projections_all:

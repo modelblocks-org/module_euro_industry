@@ -15,9 +15,7 @@ Projection precedence is:
 Annual factors between anchor years are linearly interpolated.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -315,14 +313,15 @@ def project_production(
     return projected
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--reference-production", required=True)
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--scenario", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-
+def main() -> None:
     project_production(
-        args.reference_production, args.config, args.scenario, args.output
+        snakemake.input.reference_production,
+        snakemake.params.config_path,
+        snakemake.input.scenario,
+        snakemake.output[0],
     )
+
+
+if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

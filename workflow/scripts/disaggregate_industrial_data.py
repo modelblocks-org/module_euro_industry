@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -151,39 +149,29 @@ def disaggregate(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True)
-    parser.add_argument("--keys", required=True)
-    parser.add_argument("--value-column", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--config", required=True)
-    args = parser.parse_args()
-
-    with open(args.config, encoding="utf-8") as f:
+    with open(snakemake.input.config, encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
 
     spatial_cfg = cfg.get("spatial_disaggregation", {})
     years = spatial_cfg.get("years")
     if years is not None:
         years = [int(y) for y in years]
-        print(
-            "Spatial disaggregation: filtering to years: " + ", ".join(map(str, years))
-        )
-    else:
-        print("Spatial disaggregation: no year filter configured; keeping all years.")
 
-    df = pd.read_parquet(args.input)
-    distribution_keys = pd.read_parquet(args.keys)
+    df = pd.read_parquet(snakemake.input.data)
+    distribution_keys = pd.read_parquet(snakemake.input.distribution_keys)
 
-    if args.value_column not in df.columns:
+    if snakemake.params.value_column not in df.columns:
         raise ValueError(
-            f"Value column '{args.value_column}' not found in {args.input}."
+            f"Value column '{snakemake.params.value_column}' not found in {snakemake.input.data}."
         )
 
-    out = disaggregate(df, distribution_keys, args.value_column, years=years)
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    out.to_parquet(args.output, index=False)
+    out = disaggregate(
+        df, distribution_keys, snakemake.params.value_column, years=years
+    )
+    Path(snakemake.output[0]).parent.mkdir(parents=True, exist_ok=True)
+    out.to_parquet(snakemake.output[0], index=False)
 
 
 if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
     main()

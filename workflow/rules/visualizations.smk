@@ -33,13 +33,8 @@ rule plot_results:
         "logs/plots/plot_results.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        "python workflow/scripts/plot_results.py "
-        '--projected-production "{input.projected_production}" '
-        '--route-production "{input.route_production}" '
-        '--energy-demand "{input.energy_demand}" '
-        '--visualization-config "{input.visualization_config}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/plot_results.py"
 
 
 rule plot_spatial_maps:
@@ -57,15 +52,8 @@ rule plot_spatial_maps:
         "../envs/module.yaml"
     params:
         output_dir=maps_output_dir,
-    shell:
-        "python workflow/scripts/plot_spatial_maps.py "
-        '--regions "{input.regions}" '
-        '--route-production "{input.route_production}" '
-        '--energy-demand "{input.energy_demand}" '
-        '--visualization-config "{input.visualization_config}" '
-        '--model-config "{input.model_config}" '
-        '--output-dir "{params.output_dir}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/plot_spatial_maps.py"
 
 
 rule plots_all:

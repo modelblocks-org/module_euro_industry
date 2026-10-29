@@ -1,8 +1,6 @@
 """Prepare historical annual ammonia production from the USGS workbook."""
 
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import country_converter as coco
@@ -36,9 +34,10 @@ def prepare_ammonia_production(input_path: str | Path, output_path: str | Path) 
     ammonia.to_parquet(output_path)
 
 
+def main() -> None:
+    prepare_ammonia_production(snakemake.input.usgs, snakemake.output[0])
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-    prepare_ammonia_production(args.input, args.output)
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

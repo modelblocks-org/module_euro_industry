@@ -18,17 +18,10 @@ rule transform_industrial_demand:
         "logs/demand/transform_industrial_demand.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        "python workflow/scripts/transform_industrial_demand.py "
-        '--projected-production "{input.projected_production}" '
-        '--historical-production "{input.historical_production}" '
-        '--historical-energy "{input.historical_energy}" '
-        '--config "config/config.yaml" '
-        '--technologies "{input.technologies}" '
-        '--scenario "{input.scenario}" '
-        '--output-demand "{output.demand}" '
-        '--output-route-production "{output.route_production}" '
-        '> "{log}" 2>&1'
+    params:
+        config_path="config/config.yaml",
+    script:
+        "../scripts/transform_industrial_demand.py"
 
 
 rule demand_all:
