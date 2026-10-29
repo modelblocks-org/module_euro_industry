@@ -23,11 +23,8 @@ rule prepare_ammonia_production:
         "../envs/module.yaml"
     message:
         "Prepare historical ammonia production from USGS."
-    shell:
-        "python workflow/scripts/prepare_ammonia_production.py "
-        '--input "{input.usgs}" '
-        '--output "{output}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/prepare_ammonia_production.py"
 
 
 rule prepare_coke_transformation:
@@ -40,15 +37,11 @@ rule prepare_coke_transformation:
     conda:
         "../envs/module.yaml"
     params:
-        countries=" ".join(config["countries"]),
+        countries=config["countries"],
     message:
         "Prepare historical coke-oven transformation output from Eurostat."
-    shell:
-        "python workflow/scripts/prepare_coke_transformation.py "
-        '--eurostat-dir "{input.eurostat_dir}" '
-        "--countries {params.countries} "
-        '--output "{output}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/prepare_coke_transformation.py"
 
 
 rule prepare_current_production:
@@ -56,7 +49,7 @@ rule prepare_current_production:
         jrc_dir="resources/automatic/jrc_idees",
         eurostat_dir="resources/automatic/eurostat",
         ch_industrial_production="resources/automatic/CHE_industry.csv",
-        ammonia_production=rules.prepare_ammonia_production.output,
+        ammonia_production=rules.prepare_ammonia_production.output[0],
     output:
         production="results/historical/production.parquet",
         aggregated="results/historical/production_aggregated.parquet",
@@ -64,38 +57,28 @@ rule prepare_current_production:
         "logs/prepare/prepare_current_production.log",
     conda:
         "../envs/module.yaml"
+    params:
+        config_path="config/config.yaml",
     message:
         "Prepare route-preserving historical industrial production."
-    shell:
-        "python workflow/scripts/prepare_current_production.py "
-        '--config "config/config.yaml" '
-        '--jrc-dir "{input.jrc_dir}" '
-        '--eurostat-dir "{input.eurostat_dir}" '
-        '--ch-industrial-production "{input.ch_industrial_production}" '
-        '--ammonia-production "{input.ammonia_production}" '
-        '--output "{output.production}" '
-        '--aggregated-output "{output.aggregated}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/prepare_current_production.py"
 
 
 rule prepare_current_energy_demand:
     input:
         jrc_dir="resources/automatic/jrc_idees",
         production=rules.prepare_current_production.output.production,
-        coke=rules.prepare_coke_transformation.output,
+        coke=rules.prepare_coke_transformation.output[0],
     output:
         "results/historical/energy_demand.parquet",
     log:
         "logs/prepare/prepare_current_energy_demand.log",
     conda:
         "../envs/module.yaml"
+    params:
+        config_path="config/config.yaml",
     message:
         "Prepare route/activity-preserving historical industrial energy demand."
-    shell:
-        "python workflow/scripts/prepare_current_energy_demand.py "
-        '--config "config/config.yaml" '
-        '--jrc-dir "{input.jrc_dir}" '
-        '--production "{input.production}" '
-        '--coke "{input.coke}" '
-        '--output "{output}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/prepare_current_energy_demand.py"

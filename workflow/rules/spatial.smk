@@ -13,9 +13,6 @@ if population_file:
 if user_key_file:
     spatial_key_inputs["user_key"] = user_key_file
 
-population_arg = f'--population "{population_file}"' if population_file else ""
-user_key_arg = f'--user-key "{user_key_file}"' if user_key_file else ""
-
 
 rule build_industrial_distribution_keys:
     input:
@@ -27,25 +24,15 @@ rule build_industrial_distribution_keys:
     conda:
         "../envs/module.yaml"
     params:
-        population_arg=population_arg,
-        user_key_arg=user_key_arg,
-    shell:
-        (
-            "python workflow/scripts/build_spatial_distribution_keys.py "
-            '--config "config/config.yaml" '
-            '--regions "{input.regions}" '
-            '--hotmaps "{input.hotmaps}" '
-            "{params.population_arg} "
-            "{params.user_key_arg} "
-            '--output "{output}" '
-            '> "{log}" 2>&1'
-        )
+        config_path="config/config.yaml",
+    script:
+        "../scripts/build_spatial_distribution_keys.py"
 
 
 rule disaggregate_industrial_energy_demand:
     input:
-        demand="results/demand/industrial_energy_demand.parquet",
-        distribution_keys=rules.build_industrial_distribution_keys.output,
+        data="results/demand/industrial_energy_demand.parquet",
+        distribution_keys=rules.build_industrial_distribution_keys.output[0],
         config="config/config.yaml",
     output:
         "results/spatial/industrial_energy_demand.parquet",
@@ -53,22 +40,16 @@ rule disaggregate_industrial_energy_demand:
         "logs/spatial/disaggregate_industrial_energy_demand.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        (
-            "python workflow/scripts/disaggregate_industrial_data.py "
-            '--input "{input.demand}" '
-            '--keys "{input.distribution_keys}" '
-            "--value-column demand "
-            '--config "{input.config}" '
-            '--output "{output}" '
-            '> "{log}" 2>&1'
-        )
+    params:
+        value_column="demand",
+    script:
+        "../scripts/disaggregate_industrial_data.py"
 
 
 rule disaggregate_route_production:
     input:
-        production="results/demand/route_production.parquet",
-        distribution_keys=rules.build_industrial_distribution_keys.output,
+        data="results/demand/route_production.parquet",
+        distribution_keys=rules.build_industrial_distribution_keys.output[0],
         config="config/config.yaml",
     output:
         "results/spatial/route_production.parquet",
@@ -76,16 +57,10 @@ rule disaggregate_route_production:
         "logs/spatial/disaggregate_route_production.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        (
-            "python workflow/scripts/disaggregate_industrial_data.py "
-            '--input "{input.production}" '
-            '--keys "{input.distribution_keys}" '
-            "--value-column route_production "
-            '--config "{input.config}" '
-            '--output "{output}" '
-            '> "{log}" 2>&1'
-        )
+    params:
+        value_column="route_production",
+    script:
+        "../scripts/disaggregate_industrial_data.py"
 
 
 rule spatial_all:

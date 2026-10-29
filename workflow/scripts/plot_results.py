@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -180,8 +178,8 @@ def _clean_standard_outputs(output_dir: Path) -> None:
         path.unlink()
 
 
-def main(args) -> None:
-    cfg = _load_cfg(args.visualization_config)
+def main() -> None:
+    cfg = _load_cfg(snakemake.input.visualization_config)
     output_dir = Path(cfg.get("output_dir", "results/plots"))
     output_dir.mkdir(parents=True, exist_ok=True)
     _clean_standard_outputs(output_dir)
@@ -190,12 +188,14 @@ def main(args) -> None:
     commodities = cfg.get("commodities")
 
     projected = _filter_scope(
-        pd.read_parquet(args.projected_production), countries, commodities
+        pd.read_parquet(snakemake.input.projected_production), countries, commodities
     )
     routes = _filter_scope(
-        pd.read_parquet(args.route_production), countries, commodities
+        pd.read_parquet(snakemake.input.route_production), countries, commodities
     )
-    demand = _filter_scope(pd.read_parquet(args.energy_demand), countries, commodities)
+    demand = _filter_scope(
+        pd.read_parquet(snakemake.input.energy_demand), countries, commodities
+    )
 
     production_cfg = cfg.get("production", {})
     energy_cfg = cfg.get("energy", {})
@@ -214,10 +214,5 @@ def main(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--projected-production", required=True)
-    parser.add_argument("--route-production", required=True)
-    parser.add_argument("--energy-demand", required=True)
-    parser.add_argument("--visualization-config", required=True)
-    args = parser.parse_args()
-    main(args)
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

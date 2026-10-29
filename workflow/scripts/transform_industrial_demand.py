@@ -11,9 +11,7 @@ Historical process transformations are applied in UED space. New production
 routes are intensity based because they have no historical UED baseline.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -821,25 +819,19 @@ def transform_demand(
     return demand, route_production
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--projected-production", required=True)
-    parser.add_argument("--historical-production", required=True)
-    parser.add_argument("--historical-energy", required=True)
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--technologies", required=True)
-    parser.add_argument("--scenario", required=True)
-    parser.add_argument("--output-demand", required=True)
-    parser.add_argument("--output-route-production", required=True)
-    args = parser.parse_args()
-
+def main() -> None:
     transform_demand(
-        args.projected_production,
-        args.historical_production,
-        args.historical_energy,
-        args.config,
-        args.technologies,
-        args.scenario,
-        args.output_demand,
-        args.output_route_production,
+        snakemake.input.projected_production,
+        snakemake.input.historical_production,
+        snakemake.input.historical_energy,
+        snakemake.params.config_path,
+        snakemake.input.technologies,
+        snakemake.input.scenario,
+        snakemake.output.demand,
+        snakemake.output.route_production,
     )
+
+
+if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

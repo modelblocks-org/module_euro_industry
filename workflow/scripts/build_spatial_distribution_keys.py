@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import country_converter as coco
@@ -293,16 +291,7 @@ def build_keys(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--regions", required=True)
-    parser.add_argument("--hotmaps", required=True)
-    parser.add_argument("--population")
-    parser.add_argument("--user-key")
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-
-    with open(args.config, encoding="utf-8") as f:
+    with open(snakemake.params.config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     cfg = config.get("spatial_disaggregation", {})
 
@@ -316,20 +305,24 @@ def main() -> None:
             "spatial_disaggregation.fallback_options must be a non-empty list."
         )
 
-    regions = read_regions(args.regions, region_id_column, country_column)
-    hotmaps = read_hotmaps(args.hotmaps)
+    regions = read_regions(snakemake.input.regions, region_id_column, country_column)
+    hotmaps = read_hotmaps(snakemake.input.hotmaps)
     hotmaps = assign_sites_to_regions(hotmaps, regions)
 
     population = None
-    if args.population:
+    if snakemake.input.get("population"):
         population = read_generic_key(
-            args.population, cfg.get("population", {}), default_source_name="population"
+            snakemake.input.get("population"),
+            cfg.get("population", {}),
+            default_source_name="population",
         )
 
     user_key = None
-    if args.user_key:
+    if snakemake.input.get("user_key"):
         user_key = read_generic_key(
-            args.user_key, cfg.get("user_key", {}), default_source_name="user_key"
+            snakemake.input.get("user_key"),
+            cfg.get("user_key", {}),
+            default_source_name="user_key",
         )
 
     categories = sorted(
@@ -354,9 +347,10 @@ def main() -> None:
         user_key=user_key,
     )
 
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    keys.to_parquet(args.output, index=False)
+    Path(snakemake.output[0]).parent.mkdir(parents=True, exist_ok=True)
+    keys.to_parquet(snakemake.output[0], index=False)
 
 
 if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
     main()

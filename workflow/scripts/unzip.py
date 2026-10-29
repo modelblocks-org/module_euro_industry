@@ -1,9 +1,7 @@
-"""Safely extract ZIP archives from the command line."""
+"""Safely extract ZIP archives for the Snakemake workflow."""
 
-from __future__ import annotations
-
-import argparse
 import shutil
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -37,16 +35,10 @@ def unzip_archive(input_path: str | Path, output_path: str | Path) -> None:
         shutil.move(str(extract_root), str(output_path))
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Extract a ZIP archive safely.")
-    parser.add_argument("--input", required=True, help="Input ZIP archive")
-    parser.add_argument("--output", required=True, help="Output directory")
-    return parser.parse_args()
+def main() -> None:
+    unzip_archive(snakemake.input[0], snakemake.output[0])
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    print(f"Extracting: {args.input}")
-    print(f"Destination: {args.output}")
-    unzip_archive(args.input, args.output)
-    print("Completed")
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()
