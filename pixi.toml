@@ -37,6 +37,7 @@ geopandas = ">=1.1.4"
 pyogrio = ">=0.13.0"
 shapely = ">=2.1.2"
 pydeck = ">=0.9.3"
+pydantic = ">=2.14.1"
 
 [environments]
 module = { features = ["module"], no-default-feature = true }
