@@ -54,7 +54,7 @@ rule disaggregate_industrial_energy_demand:
     output:
         data="<industrial_energy_demand>",
     log:
-        "<logs>/{shapes}/spatial/disaggregate_industrial_energy_demand.log",
+        "<logs>/{shapes}/{scenario}/spatial/disaggregate_industrial_energy_demand.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -71,7 +71,7 @@ rule disaggregate_route_production:
     output:
         data="<route_production>",
     log:
-        "<logs>/{shapes}/spatial/disaggregate_route_production.log",
+        "<logs>/{shapes}/{scenario}/spatial/disaggregate_route_production.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -86,6 +86,6 @@ rule spatial_all:
         rules.disaggregate_industrial_energy_demand.output,
         rules.disaggregate_route_production.output,
     output:
-        touch("<results>/{shapes}/spatial/.spatial_complete"),
+        touch("<results>/{shapes}/{scenario}/spatial/.spatial_complete"),
     conda:
         "../envs/module.yaml"

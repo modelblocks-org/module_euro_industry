@@ -6,7 +6,7 @@ rule plot_results:
     output:
         touch("<plots>"),
     log:
-        "<logs>/{shapes}/plots/plot_results.log",
+        "<logs>/{shapes}/{scenario}/plots/plot_results.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -24,7 +24,7 @@ rule plot_spatial_maps:
     output:
         touch("<maps>"),
     log:
-        "<logs>/{shapes}/plots/plot_spatial_maps.log",
+        "<logs>/{shapes}/{scenario}/plots/plot_spatial_maps.log",
     conda:
         "../envs/module.yaml"
     params:

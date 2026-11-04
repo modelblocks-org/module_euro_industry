@@ -10,20 +10,20 @@ min_version("9.19")
 
 pathvars:
     shapes="<resources>/user/{shapes}/shapes.parquet",
-    scenario="config/scenarios/industrial_relocation.yaml",
+    scenario="config/scenarios/{scenario}.yaml",
     population="<resources>/user/{shapes}/population.csv",
     user_key="<resources>/user/{shapes}/user_key.csv",
     historical_production="<results>/{shapes}/historical/production.parquet",
     historical_production_aggregated="<results>/{shapes}/historical/production_aggregated.parquet",
     historical_energy_demand="<results>/{shapes}/historical/energy_demand.parquet",
-    projected_production="<results>/{shapes}/projections/production.parquet",
-    national_industrial_energy_demand="<results>/{shapes}/demand/industrial_energy_demand.parquet",
-    national_route_production="<results>/{shapes}/demand/route_production.parquet",
+    projected_production="<results>/{shapes}/{scenario}/projections/production.parquet",
+    national_industrial_energy_demand="<results>/{shapes}/{scenario}/demand/industrial_energy_demand.parquet",
+    national_route_production="<results>/{shapes}/{scenario}/demand/route_production.parquet",
     industrial_distribution_keys="<results>/{shapes}/spatial/industrial_distribution_keys.parquet",
-    industrial_energy_demand="<results>/{shapes}/spatial/industrial_energy_demand.parquet",
-    route_production="<results>/{shapes}/spatial/route_production.parquet",
-    plots="<results>/{shapes}/plots/.plots_complete",
-    maps="<results>/{shapes}/maps/.maps_complete",
+    industrial_energy_demand="<results>/{shapes}/{scenario}/spatial/industrial_energy_demand.parquet",
+    route_production="<results>/{shapes}/{scenario}/spatial/route_production.parquet",
+    plots="<results>/{shapes}/{scenario}/plots/.plots_complete",
+    maps="<results>/{shapes}/{scenario}/maps/.maps_complete",
 
 
 # Load the example configuration. This will be overridden by users.

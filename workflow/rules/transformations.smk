@@ -11,7 +11,7 @@ rule transform_industrial_demand:
         demand="<national_industrial_energy_demand>",
         route_production="<national_route_production>",
     log:
-        "<logs>/{shapes}/demand/transform_industrial_demand.log",
+        "<logs>/{shapes}/{scenario}/demand/transform_industrial_demand.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -26,6 +26,6 @@ rule demand_all:
     input:
         rules.transform_industrial_demand.output,
     output:
-        touch("<results>/{shapes}/demand/.demand_complete"),
+        touch("<results>/{shapes}/{scenario}/demand/.demand_complete"),
     conda:
         "../envs/module.yaml"

@@ -5,7 +5,7 @@ rule project_production:
     output:
         production="<projected_production>",
     log:
-        "<logs>/{shapes}/projections/project_production.log",
+        "<logs>/{shapes}/{scenario}/projections/project_production.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -18,6 +18,6 @@ rule projections_all:
     input:
         rules.project_production.output,
     output:
-        touch("<results>/{shapes}/projections/.projections_complete"),
+        touch("<results>/{shapes}/{scenario}/projections/.projections_complete"),
     conda:
         "../envs/module.yaml"

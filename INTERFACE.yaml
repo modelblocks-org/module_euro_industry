@@ -25,7 +25,7 @@ pathvars:
         The optional `shape_class` column identifies the shape context. When
         present, only rows with `land` are processed; otherwise, all rows are used.
     scenario:
-      default: "config/scenarios/industrial_relocation.yaml"
+      default: "config/scenarios/{scenario}.yaml"
       description: Industrial deployment scenario YAML.
     population:
       default: "<resources>/user/{shapes}/population.csv"
@@ -44,28 +44,29 @@ pathvars:
       default: "<results>/{shapes}/historical/energy_demand.parquet"
       description: Historical industrial energy demand.
     projected_production:
-      default: "<results>/{shapes}/projections/production.parquet"
+      default: "<results>/{shapes}/{scenario}/projections/production.parquet"
       description: Projected national industrial production.
     national_industrial_energy_demand:
-      default: "<results>/{shapes}/demand/industrial_energy_demand.parquet"
+      default: "<results>/{shapes}/{scenario}/demand/industrial_energy_demand.parquet"
       description: National industrial energy demand after transformation.
     national_route_production:
-      default: "<results>/{shapes}/demand/route_production.parquet"
+      default: "<results>/{shapes}/{scenario}/demand/route_production.parquet"
       description: National industrial production by route after transformation.
     industrial_distribution_keys:
       default: "<results>/{shapes}/spatial/industrial_distribution_keys.parquet"
       description: Regional industrial distribution weights.
     industrial_energy_demand:
-      default: "<results>/{shapes}/spatial/industrial_energy_demand.parquet"
+      default: "<results>/{shapes}/{scenario}/spatial/industrial_energy_demand.parquet"
       description: Regional industrial energy demand.
     route_production:
-      default: "<results>/{shapes}/spatial/route_production.parquet"
+      default: "<results>/{shapes}/{scenario}/spatial/route_production.parquet"
       description: Regional industrial production by route.
     plots:
-      default: "<results>/{shapes}/plots/.plots_complete"
+      default: "<results>/{shapes}/{scenario}/plots/.plots_complete"
       description: Completion marker for national result plots written to its parent directory.
     maps:
-      default: "<results>/{shapes}/maps/.maps_complete"
+      default: "<results>/{shapes}/{scenario}/maps/.maps_complete"
       description: Completion marker for regional HTML maps written to its parent directory.
 wildcards:
   shapes: name of the supplied regional shape set
+  scenario: scenario YAML filename without the .yaml extension (in config/scenarios)
