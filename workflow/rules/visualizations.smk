@@ -2,23 +2,14 @@ import yaml
 
 # Read visualization settings once when Snakemake parses the workflow.
 with open("config/visualization.yaml", "r", encoding="utf-8") as f:
-    visualization_cfg = yaml.safe_load(f).get("visualization", {})
+    visualization_cfg = yaml.safe_load(f)["visualization"]
 
 
-plots_output_dir = visualization_cfg.get(
-    "output_dir",
-    "results/plots",
-)
+plots_output_dir = visualization_cfg["output_dir"]
 
-spatial_maps_cfg = visualization_cfg.get(
-    "spatial_maps",
-    {},
-)
+spatial_maps_cfg = visualization_cfg["spatial_maps"]
 
-maps_output_dir = spatial_maps_cfg.get(
-    "output_dir",
-    "results/maps",
-)
+maps_output_dir = spatial_maps_cfg["output_dir"]
 
 
 rule plot_results:
@@ -33,13 +24,8 @@ rule plot_results:
         "logs/plots/plot_results.log",
     conda:
         "../envs/module.yaml"
-    shell:
-        "python workflow/scripts/plot_results.py "
-        '--projected-production "{input.projected_production}" '
-        '--route-production "{input.route_production}" '
-        '--energy-demand "{input.energy_demand}" '
-        '--visualization-config "{input.visualization_config}" '
-        '> "{log}" 2>&1'
+    script:
+        "../scripts/plot_results.py"
 
 
 rule plot_spatial_maps:
@@ -48,7 +34,6 @@ rule plot_spatial_maps:
         route_production="results/spatial/route_production.parquet",
         energy_demand="results/spatial/industrial_energy_demand.parquet",
         visualization_config="config/visualization.yaml",
-        model_config="config/config.yaml",
     output:
         touch(f"{maps_output_dir}/.maps_complete"),
     log:
@@ -57,15 +42,10 @@ rule plot_spatial_maps:
         "../envs/module.yaml"
     params:
         output_dir=maps_output_dir,
-    shell:
-        "python workflow/scripts/plot_spatial_maps.py "
-        '--regions "{input.regions}" '
-        '--route-production "{input.route_production}" '
-        '--energy-demand "{input.energy_demand}" '
-        '--visualization-config "{input.visualization_config}" '
-        '--model-config "{input.model_config}" '
-        '--output-dir "{params.output_dir}" '
-        '> "{log}" 2>&1'
+        region_id_column=config["spatial_disaggregation"]["region_id_column"],
+        years=config["spatial_disaggregation"]["years"],
+    script:
+        "../scripts/plot_spatial_maps.py"
 
 
 rule plots_all:

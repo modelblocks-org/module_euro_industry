@@ -96,10 +96,11 @@ spatial_disaggregation:
   # Optional population-based regional key. The weights do not need to sum to
   # one; they are renormalized to the regions present in the GeoParquet.
   population:
-    file: resources/user/pop_layout_base_s_60.csv
+    file: null  # Set to a population CSV path to enable this fallback.
     region_column: name
     country_column: ct
     weight_column: fraction
+    source_name: population
 
   # Optional arbitrary user-provided regional distribution key. Set file: null
   # when it is not used. It follows the same three-column concept as population.

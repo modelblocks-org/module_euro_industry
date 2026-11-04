@@ -7,15 +7,12 @@ replaced by the calibrated AMMONIA/HVC/CHLORINE/METHANOL activities used by the
 legacy workflow.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 from pathlib import Path
 
 import country_converter as coco
 import numpy as np
 import pandas as pd
-import yaml
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     JRC_INDUSTRY_SHEETS,
@@ -173,7 +170,13 @@ def production_per_country(
 
 
 def split_basic_chemicals(
-    production: pd.DataFrame, ammonia_path: Path, year: int, calibration: dict
+    production: pd.DataFrame,
+    ammonia_path: Path,
+    year: int,
+    basic_chemicals_without_NH3_production_today,
+    HVC_production_today,
+    chlorine_production_today,
+    methanol_production_today,
 ) -> pd.DataFrame:
     """Apply the legacy historical chemical calibration in normalized records."""
     mask = (production["sector"] == "CHI") & (
@@ -195,15 +198,13 @@ def split_basic_chemicals(
     # NH3; the subtraction/distribution is therefore a calibration convention,
     # not a physical mass balance.
     residual = (basic["production"] - ammonia_series).clip(lower=0.0)
-    distribution_key = (
-        residual / calibration["basic_chemicals_without_NH3_production_today"] / 1e3
-    )
+    distribution_key = residual / basic_chemicals_without_NH3_production_today / 1e3
 
     calibrated = {
         "Ammonia": ammonia_series,
-        "HVC": calibration["HVC_production_today"] * 1e3 * distribution_key,
-        "Chlorine": calibration["chlorine_production_today"] * 1e3 * distribution_key,
-        "Methanol": calibration["methanol_production_today"] * 1e3 * distribution_key,
+        "HVC": HVC_production_today * 1e3 * distribution_key,
+        "Chlorine": chlorine_production_today * 1e3 * distribution_key,
+        "Methanol": methanol_production_today * 1e3 * distribution_key,
     }
 
     records = []
@@ -242,7 +243,11 @@ def aggregate_commodities(production: pd.DataFrame) -> pd.DataFrame:
 
 def prepare_current_production(
     countries,
-    calibration,
+    reference_year,
+    basic_chemicals_without_NH3_production_today,
+    HVC_production_today,
+    chlorine_production_today,
+    methanol_production_today,
     jrc_dir,
     eurostat_dir,
     ch_path,
@@ -250,7 +255,7 @@ def prepare_current_production(
     output_path,
     aggregate_path,
 ):
-    year = int(calibration["reference_year"])
+    year = int(reference_year)
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.values)
     frames = [
         production_per_country(
@@ -260,7 +265,13 @@ def prepare_current_production(
     ]
     production = pd.concat(frames, ignore_index=True)
     production = split_basic_chemicals(
-        production, Path(ammonia_path), year, calibration
+        production,
+        Path(ammonia_path),
+        year,
+        basic_chemicals_without_NH3_production_today,
+        HVC_production_today,
+        chlorine_production_today,
+        methanol_production_today,
     )
     production["production"] = pd.to_numeric(
         production["production"], errors="coerce"
@@ -279,30 +290,23 @@ def prepare_current_production(
     aggregated.to_parquet(aggregate_path, index=False)
 
 
-def load_config(path):
-    with open(path, encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+def main() -> None:
+    prepare_current_production(
+        snakemake.params.countries,
+        snakemake.params.reference_year,
+        snakemake.params.basic_chemicals_without_NH3_production_today,
+        snakemake.params.HVC_production_today,
+        snakemake.params.chlorine_production_today,
+        snakemake.params.methanol_production_today,
+        snakemake.input.jrc_dir,
+        snakemake.input.eurostat_dir,
+        snakemake.input.ch_industrial_production,
+        snakemake.input.ammonia_production,
+        snakemake.output.production,
+        snakemake.output.aggregated,
+    )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--jrc-dir", required=True)
-    parser.add_argument("--eurostat-dir", required=True)
-    parser.add_argument("--ch-industrial-production", required=True)
-    parser.add_argument("--ammonia-production", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--aggregated-output", required=True)
-    args = parser.parse_args()
-
-    config = load_config(args.config)
-    prepare_current_production(
-        config["countries"],
-        config["historical_calibration"],
-        args.jrc_dir,
-        args.eurostat_dir,
-        args.ch_industrial_production,
-        args.ammonia_production,
-        args.output,
-        args.aggregated_output,
-    )
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

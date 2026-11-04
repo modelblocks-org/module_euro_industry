@@ -16,16 +16,13 @@ FEC observation is copied into the UED layer. This is equivalent to UED=FEC for
 feedstocks and avoids silently dropping feedstock from efficiency-ready data.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 import warnings
 from pathlib import Path
 
 import country_converter as coco
 import numpy as np
 import pandas as pd
-import yaml
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     COKE_CARRIERS,
@@ -413,7 +410,17 @@ def _derive_hvc_ued(
 
 
 def calibrate_basic_chemicals(
-    demand: pd.DataFrame, production: pd.DataFrame, calibration: dict
+    demand: pd.DataFrame,
+    production: pd.DataFrame,
+    ammonia_as_carrier,
+    MWh_CH4_per_tMeOH,
+    MWh_elec_per_tCl,
+    MWh_H2_per_tCl,
+    MWh_elec_per_tMeOH,
+    MWh_elec_per_tNH3_electrolysis,
+    MWh_H2_per_tNH3_electrolysis,
+    MWh_NH3_per_tNH3,
+    reference_year,
 ) -> pd.DataFrame:
     """Split JRC Basic chemicals while preserving FEC/UED process structure."""
     if demand.empty:
@@ -443,14 +450,13 @@ def calibrate_basic_chemicals(
 
         deductions = {
             "ELEC": (
-                chlorine * calibration["MWh_elec_per_tCl"]
-                + methanol * calibration["MWh_elec_per_tMeOH"]
-                + ammonia * calibration["MWh_elec_per_tNH3_electrolysis"]
+                chlorine * MWh_elec_per_tCl
+                + methanol * MWh_elec_per_tMeOH
+                + ammonia * MWh_elec_per_tNH3_electrolysis
             ),
-            "NG_BIOGAS": methanol * calibration["MWh_CH4_per_tMeOH"],
+            "NG_BIOGAS": methanol * MWh_CH4_per_tMeOH,
             "HYDROGEN": (
-                chlorine * calibration["MWh_H2_per_tCl"]
-                + ammonia * calibration["MWh_H2_per_tNH3_electrolysis"]
+                chlorine * MWh_H2_per_tCl + ammonia * MWh_H2_per_tNH3_electrolysis
             ),
         }
 
@@ -490,7 +496,7 @@ def calibrate_basic_chemicals(
                     carrier=carrier,
                     energy_layer="FEC",
                     use_type=use_type,
-                    year=int(calibration["reference_year"]),
+                    year=int(reference_year),
                     demand=value,
                     unit="TWh/a",
                     source="historical_calibration",
@@ -509,33 +515,19 @@ def calibrate_basic_chemicals(
                 )
             )
 
-        add("Chlorine", "ELEC", chlorine * calibration["MWh_elec_per_tCl"])
-        add("Chlorine", "HYDROGEN", chlorine * calibration["MWh_H2_per_tCl"])
-        add("Methanol", "ELEC", methanol * calibration["MWh_elec_per_tMeOH"])
+        add("Chlorine", "ELEC", chlorine * MWh_elec_per_tCl)
+        add("Chlorine", "HYDROGEN", chlorine * MWh_H2_per_tCl)
+        add("Methanol", "ELEC", methanol * MWh_elec_per_tMeOH)
         # Methanol natural-gas input is treated as feedstock/non-energy use.
-        add(
-            "Methanol",
-            "NG_BIOGAS",
-            methanol * calibration["MWh_CH4_per_tMeOH"],
-            "feedstock",
-        )
-        if calibration.get("ammonia", True):
-            add(
-                "Ammonia",
-                "AMMONIA",
-                ammonia * calibration["MWh_NH3_per_tNH3"],
-                "feedstock",
-            )
+        add("Methanol", "NG_BIOGAS", methanol * MWh_CH4_per_tMeOH, "feedstock")
+        if ammonia_as_carrier:
+            add("Ammonia", "AMMONIA", ammonia * MWh_NH3_per_tNH3, "feedstock")
         else:
-            add(
-                "Ammonia",
-                "ELEC",
-                ammonia * calibration["MWh_elec_per_tNH3_electrolysis"],
-            )
+            add("Ammonia", "ELEC", ammonia * MWh_elec_per_tNH3_electrolysis)
             add(
                 "Ammonia",
                 "HYDROGEN",
-                ammonia * calibration["MWh_H2_per_tNH3_electrolysis"],
+                ammonia * MWh_H2_per_tNH3_electrolysis,
                 "feedstock",
             )
 
@@ -620,13 +612,22 @@ def add_coke_ovens(
 
 def prepare(
     countries: list[str],
-    calibration: dict,
+    reference_year,
+    coke_oven_allocation,
+    ammonia_as_carrier,
+    MWh_CH4_per_tMeOH,
+    MWh_elec_per_tCl,
+    MWh_H2_per_tCl,
+    MWh_elec_per_tMeOH,
+    MWh_elec_per_tNH3_electrolysis,
+    MWh_H2_per_tNH3_electrolysis,
+    MWh_NH3_per_tNH3,
     jrc_dir: str | Path,
     production_path: str | Path,
     coke_path: str | Path,
     output_path: str | Path,
 ) -> None:
-    year = int(calibration["reference_year"])
+    year = int(reference_year)
     jrc_dir = Path(jrc_dir)
     production = pd.read_parquet(production_path)
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.tolist())
@@ -648,13 +649,20 @@ def prepare(
 
     inferred = infer_non_eu_demand(eu_demand, production, countries, eu27)
     demand = pd.concat([eu_demand, inferred], ignore_index=True)
-    demand = calibrate_basic_chemicals(demand, production, calibration)
-    demand = add_coke_ovens(
+    demand = calibrate_basic_chemicals(
         demand,
-        Path(coke_path),
-        year,
-        float(calibration.get("coke_oven_allocation", 0.75)),
+        production,
+        ammonia_as_carrier,
+        MWh_CH4_per_tMeOH,
+        MWh_elec_per_tCl,
+        MWh_H2_per_tCl,
+        MWh_elec_per_tMeOH,
+        MWh_elec_per_tNH3_electrolysis,
+        MWh_H2_per_tNH3_electrolysis,
+        MWh_NH3_per_tNH3,
+        reference_year,
     )
+    demand = add_coke_ovens(demand, Path(coke_path), year, float(coke_oven_allocation))
 
     output_columns = [
         "country",
@@ -706,26 +714,26 @@ def prepare(
     demand.to_parquet(output_path, index=False)
 
 
-def load_config(path: str | Path) -> dict:
-    with open(path, encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+def main() -> None:
+    prepare(
+        countries=snakemake.params.countries,
+        reference_year=snakemake.params.reference_year,
+        coke_oven_allocation=snakemake.params.coke_oven_allocation,
+        ammonia_as_carrier=snakemake.params.ammonia,
+        MWh_CH4_per_tMeOH=snakemake.params.MWh_CH4_per_tMeOH,
+        MWh_elec_per_tCl=snakemake.params.MWh_elec_per_tCl,
+        MWh_H2_per_tCl=snakemake.params.MWh_H2_per_tCl,
+        MWh_elec_per_tMeOH=snakemake.params.MWh_elec_per_tMeOH,
+        MWh_elec_per_tNH3_electrolysis=snakemake.params.MWh_elec_per_tNH3_electrolysis,
+        MWh_H2_per_tNH3_electrolysis=snakemake.params.MWh_H2_per_tNH3_electrolysis,
+        MWh_NH3_per_tNH3=snakemake.params.MWh_NH3_per_tNH3,
+        jrc_dir=snakemake.input.jrc_dir,
+        production_path=snakemake.input.production,
+        coke_path=snakemake.input.coke,
+        output_path=snakemake.output.energy_demand,
+    )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--jrc-dir", required=True)
-    parser.add_argument("--production", required=True)
-    parser.add_argument("--coke", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-
-    config = load_config(args.config)
-    prepare(
-        countries=config["countries"],
-        calibration=config["historical_calibration"],
-        jrc_dir=args.jrc_dir,
-        production_path=args.production,
-        coke_path=args.coke,
-        output_path=args.output,
-    )
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()

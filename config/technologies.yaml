@@ -45,6 +45,7 @@ processes:
 production_routes:
   H2_DRI_EAF:
     commodity: STEEL
+    inherit_use_types_from: null
     processes:
     - hydrogen_dri
     - new_eaf

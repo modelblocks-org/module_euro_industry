@@ -11,9 +11,7 @@ Historical process transformations are applied in UED space. New production
 routes are intensity based because they have no historical UED baseline.
 """
 
-from __future__ import annotations
-
-import argparse
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -26,7 +24,7 @@ HISTORICAL_TECH = "HISTORICAL"
 
 def load_yaml(path: str | Path) -> dict:
     with open(path, encoding="utf-8") as handle:
-        return yaml.safe_load(handle) or {}
+        return yaml.safe_load(handle)
 
 
 def _interp(
@@ -132,7 +130,7 @@ def route_share_curve(
     for anchor in anchor_years:
         anchor_shares = {}
         for route in all_routes:
-            anchors = scenario.get(route, {}) or {}
+            anchors = scenario[route]
             if str(anchor) in anchors:
                 anchor_shares[route] = float(anchors[str(anchor)])
             elif anchor in anchors:
@@ -149,9 +147,7 @@ def route_share_curve(
         shares = {}
         for route in all_routes:
             ref = historical_shares.get(route, 0.0)
-            shares[route] = _interp(
-                int(year), reference_year, ref, scenario.get(route, {}) or {}
-            )
+            shares[route] = _interp(int(year), reference_year, ref, scenario[route])
         _validate_shares(shares, f"{country}/{commodity}/{year}", tol=1e-5)
         for route, share in shares.items():
             rows.append(
@@ -210,7 +206,7 @@ def build_route_production(
 
         if not shares:
             if has_route_scenario:
-                commodity_scenario = scenario_route_shares.get(commodity, {}) or {}
+                commodity_scenario = scenario_route_shares[commodity]
 
                 # Calibrated/aggregated commodities such as HVC may exist in the
                 # historical commodity table without an explicit route record.
@@ -246,8 +242,9 @@ def build_route_production(
 
         # Make fallbacks explicit in the output for traceability.
         if (country, commodity) not in hist_shares:
-            if has_route_scenario and "BASE_ROUTE" in (
-                scenario_route_shares.get(commodity, {}) or {}
+            if (
+                has_route_scenario
+                and "BASE_ROUTE" in (scenario_route_shares[commodity])
             ):
                 curve["route_share_source"] = "scenario_from_base_route_fallback"
             elif not has_route_scenario:
@@ -351,7 +348,7 @@ def _transformation_curve(
     for anchor in anchors:
         values = {}
         for tech in all_techs:
-            mapping = techs.get(tech, {}) or {}
+            mapping = techs[tech]
             if str(anchor) in mapping:
                 values[tech] = float(mapping[str(anchor)])
             elif anchor in mapping:
@@ -371,9 +368,7 @@ def _transformation_curve(
         values = {}
         for tech in all_techs:
             ref = 1.0 if tech == HISTORICAL_TECH else 0.0
-            values[tech] = _interp(
-                int(year), reference_year, ref, techs.get(tech, {}) or {}
-            )
+            values[tech] = _interp(int(year), reference_year, ref, techs[tech])
         _validate_shares(values, f"process transformation {year}", tol=1e-5)
         curves[int(year)] = values
     return curves
@@ -427,13 +422,13 @@ def _selector_mask(df: pd.DataFrame, tr: dict) -> pd.Series:
         else df["process"].astype(str).isin(processes)
     )
     mask = (
-        _value_selector(df["commodity"], tr.get("commodity", "*"))
-        & _value_selector(df["production_route"], tr.get("production_route", "*"))
+        _value_selector(df["commodity"], tr["commodity"])
+        & _value_selector(df["production_route"], tr["production_route"])
         & process_mask
     )
-    if tr.get("use_type"):
+    if tr["use_type"]:
         mask &= _value_selector(df["use_type"], tr["use_type"])
-    if tr.get("countries"):
+    if tr["countries"]:
         mask &= _value_selector(df["country"], tr["countries"])
     return mask
 
@@ -602,12 +597,12 @@ def build_existing_route_demand(
     return merged
 
 
-def _intensity_entries(definition: dict) -> list[tuple[str, float, str]]:
+def _intensity_entries(intensities: dict) -> list[tuple[str, float, str]]:
     result = []
-    for carrier, raw in definition.get("intensities", {}).items():
+    for carrier, raw in intensities.items():
         if isinstance(raw, dict):
             value = float(raw["value"])
-            use_type = raw.get("use_type", "final_energy")
+            use_type = raw["use_type"]
         else:
             value = float(raw)
             use_type = "final_energy"
@@ -631,13 +626,13 @@ def build_new_route_demand(
         ].copy()
         if rp.empty:
             continue
-        for process_name in route_def.get("processes", []):
+        for process_name in route_def["processes"]:
             process_def = processes.get(process_name)
             if not process_def:
                 raise ValueError(
                     f"New route '{route_name}' references undefined process '{process_name}'."
                 )
-            entries = _intensity_entries(process_def)
+            entries = _intensity_entries(process_def["intensities"])
             if not entries:
                 raise ValueError(
                     f"New-route process '{process_name}' must define intensities in MWh/t product."
@@ -672,10 +667,10 @@ def build_new_route_demand(
         # A new route can inherit selected historical use types (most notably
         # chemical feedstocks) from an incumbent route. This allows process
         # energy to change without silently deleting material/feedstock demand.
-        inherit = route_def.get("inherit_use_types_from")
+        inherit = route_def["inherit_use_types_from"]
         if inherit:
             source_route = str(inherit["production_route"])
-            use_types = inherit.get("use_types", ["feedstock"])
+            use_types = inherit["use_types"]
             if isinstance(use_types, str):
                 use_types = [use_types]
             use_types = [str(u) for u in use_types]
@@ -730,20 +725,19 @@ def transform_demand(
     projected_production_path: str | Path,
     historical_production_path: str | Path,
     historical_energy_path: str | Path,
-    config_path: str | Path,
+    reference_year: int,
     technologies_path: str | Path,
     scenario_path: str | Path,
     output_demand_path: str | Path,
     output_route_production_path: str | Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    config = load_yaml(config_path)
-    reference_year = int(config["historical_calibration"]["reference_year"])
+    reference_year = int(reference_year)
     technologies = load_yaml(technologies_path)
     scenario = load_yaml(scenario_path)
-    processes = technologies.get("processes", {}) or {}
-    route_definitions = technologies.get("production_routes", {}) or {}
-    transformations = scenario.get("process_transformations", []) or []
-    route_shares = scenario.get("route_shares", {}) or {}
+    processes = technologies["processes"]
+    route_definitions = technologies["production_routes"]
+    transformations = scenario["process_transformations"]
+    route_shares = scenario["route_shares"]
 
     projected = pd.read_parquet(projected_production_path)
     hist_prod = pd.read_parquet(historical_production_path)
@@ -821,25 +815,19 @@ def transform_demand(
     return demand, route_production
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--projected-production", required=True)
-    parser.add_argument("--historical-production", required=True)
-    parser.add_argument("--historical-energy", required=True)
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--technologies", required=True)
-    parser.add_argument("--scenario", required=True)
-    parser.add_argument("--output-demand", required=True)
-    parser.add_argument("--output-route-production", required=True)
-    args = parser.parse_args()
-
+def main() -> None:
     transform_demand(
-        args.projected_production,
-        args.historical_production,
-        args.historical_energy,
-        args.config,
-        args.technologies,
-        args.scenario,
-        args.output_demand,
-        args.output_route_production,
+        snakemake.input.projected_production,
+        snakemake.input.historical_production,
+        snakemake.input.historical_energy,
+        snakemake.params.reference_year,
+        snakemake.input.technologies,
+        snakemake.input.scenario,
+        snakemake.output.demand,
+        snakemake.output.route_production,
     )
+
+
+if __name__ == "__main__":
+    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    main()
