@@ -1,10 +1,10 @@
-"""Prepare land shapes using required input columns and ISO2 country codes."""
+"""Prepare land shapes and country lists using ISO2 country codes."""
 
 import sys
+from pathlib import Path
 
 import country_converter as coco
 import geopandas as gpd
-from _country_scope import country_scope
 
 
 def read_regions(path: str) -> gpd.GeoDataFrame:
@@ -40,15 +40,39 @@ def read_regions(path: str) -> gpd.GeoDataFrame:
     return regions[["region", "country", "geometry"]].to_crs("EPSG:4326")
 
 
+def country_scope(country_ids, supported_countries, eu_countries):
+    """Add the fixed EU reference only when non-EU inference is needed."""
+    country_ids = sorted(set(country_ids))
+    if not country_ids:
+        raise ValueError("The supplied shapes contain no land countries.")
+    unsupported = set(country_ids) - set(supported_countries)
+    if unsupported:
+        raise ValueError(
+            "No supported industrial calibration source for countries: "
+            f"{', '.join(sorted(unsupported))}. "
+            "Supply shapes restricted to supported countries, or add a verified "
+            "industrial data source before including these countries."
+        )
+    reference = sorted(set(supported_countries) & set(eu_countries))
+    source_country_ids = set(country_ids)
+    if source_country_ids - set(eu_countries):
+        source_country_ids.update(reference)
+    return country_ids, sorted(source_country_ids)
+
+
 def main():
-    """Prepare the shape-specific workflow input."""
+    """Prepare land shapes and target/reference country lists."""
     shapes = read_regions(snakemake.input.shapes)
-    country_scope(
+    country_ids, source_country_ids = country_scope(
         shapes["country"].unique(),
         snakemake.params.supported_countries,
         coco.CountryConverter().EU27as("ISO2").ISO2.tolist(),
     )
     shapes.to_parquet(snakemake.output.shapes, index=False)
+    Path(snakemake.output.country_ids).write_text("\n".join(country_ids) + "\n")
+    Path(snakemake.output.source_country_ids).write_text(
+        "\n".join(source_country_ids) + "\n"
+    )
 
 
 if __name__ == "__main__":

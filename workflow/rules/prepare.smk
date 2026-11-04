@@ -6,6 +6,8 @@ rule prepare_shapes:
         shapes="<shapes>",
     output:
         shapes="<resources>/automatic/shapes/{shapes}/land_shapes.parquet",
+        country_ids="<resources>/automatic/shapes/{shapes}/country_ids.txt",
+        source_country_ids="<resources>/automatic/shapes/{shapes}/source_country_ids.txt",
     log:
         "<logs>/{shapes}/prepare_shapes.log",
     conda:
@@ -44,7 +46,7 @@ rule prepare_ammonia_production:
 
 rule prepare_coke_transformation:
     input:
-        shapes=rules.prepare_shapes.output.shapes,
+        country_ids=rules.prepare_shapes.output.country_ids,
         eurostat_dir="<resources>/automatic/eurostat",
     output:
         transformation="<resources>/automatic/shapes/{shapes}/coke_transformation.parquet",
@@ -60,7 +62,8 @@ rule prepare_coke_transformation:
 
 rule prepare_current_production:
     input:
-        shapes=rules.prepare_shapes.output.shapes,
+        country_ids=rules.prepare_shapes.output.country_ids,
+        source_country_ids=rules.prepare_shapes.output.source_country_ids,
         jrc_dir="<resources>/automatic/jrc_idees",
         eurostat_dir="<resources>/automatic/eurostat",
         ch_industrial_production="<resources>/automatic/CHE_industry.csv",
@@ -74,7 +77,6 @@ rule prepare_current_production:
     conda:
         "../envs/module.yaml"
     params:
-        supported_countries=internal["calibration_countries"],
         reference_year=config["historical_calibration"]["reference_year"],
         basic_chemicals_without_NH3_production_today=config["historical_calibration"][
             "basic_chemicals_without_NH3_production_today"
@@ -94,7 +96,8 @@ rule prepare_current_production:
 
 rule prepare_current_energy_demand:
     input:
-        shapes=rules.prepare_shapes.output.shapes,
+        country_ids=rules.prepare_shapes.output.country_ids,
+        source_country_ids=rules.prepare_shapes.output.source_country_ids,
         jrc_dir="<resources>/automatic/jrc_idees",
         production=rules.prepare_current_production.output.source_production,
         coke=rules.prepare_coke_transformation.output.transformation,
@@ -105,7 +108,6 @@ rule prepare_current_energy_demand:
     conda:
         "../envs/module.yaml"
     params:
-        supported_countries=internal["calibration_countries"],
         reference_year=config["historical_calibration"]["reference_year"],
         MWh_NH3_per_tNH3=config["historical_calibration"]["MWh_NH3_per_tNH3"],
         MWh_H2_per_tNH3_electrolysis=config["historical_calibration"][

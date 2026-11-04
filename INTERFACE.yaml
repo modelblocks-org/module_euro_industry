@@ -29,10 +29,10 @@ pathvars:
       description: Industrial deployment scenario YAML.
     population:
       default: "<resources>/user/{shapes}/population.csv"
-      description: Optional population weights; used when spatial_disaggregation.population.enabled is true.
+      description: Optional population weights. Used when spatial_disaggregation.population.enabled is true.
     user_key:
       default: "<resources>/user/{shapes}/user_key.csv"
-      description: Optional regional weights; used when spatial_disaggregation.user_key.enabled is true.
+      description: Optional regional weights. Used when spatial_disaggregation.user_key.enabled is true.
   results:
     historical_production:
       default: "<results>/{shapes}/historical/production.parquet"

@@ -3,7 +3,8 @@
 The output stays close to JRC-IDEES: each JRC sector/activity is retained as a
 record, while production routes are only distinguished where JRC itself gives
 separate historical activity (steel and aluminium). Basic chemicals are
-replaced by calibrated AMMONIA/HVC/CHLORINE/METHANOL activities.
+replaced by the calibrated AMMONIA/HVC/CHLORINE/METHANOL activities used by the
+legacy workflow.
 """
 
 import sys
@@ -12,7 +13,6 @@ from pathlib import Path
 import country_converter as coco
 import numpy as np
 import pandas as pd
-from _country_scope import read_country_scope
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     JRC_INDUSTRY_SHEETS,
@@ -71,7 +71,7 @@ def find_physical_output(df: pd.DataFrame) -> slice:
 def get_energy_ratio(
     country: str, eurostat_dir: Path, jrc_dir: Path, year: int, ch_path: Path
 ) -> pd.Series:
-    """National/EU27 sector energy ratio used to infer non-EU production."""
+    """National/EU27 sector energy ratio used by the legacy non-EU proxy."""
     if country == "CH":
         energy = pd.read_csv(ch_path, index_col=0).dropna()
         energy = energy.rename(index=CH_MAPPING).groupby(level=0).sum()
@@ -299,9 +299,8 @@ def prepare_current_production(
 
 
 def main() -> None:
-    countries, source_countries = read_country_scope(
-        snakemake.input.shapes, snakemake.params.supported_countries
-    )
+    countries = Path(snakemake.input.country_ids).read_text().splitlines()
+    source_countries = Path(snakemake.input.source_country_ids).read_text().splitlines()
     prepare_current_production(
         source_countries,
         snakemake.params.reference_year,

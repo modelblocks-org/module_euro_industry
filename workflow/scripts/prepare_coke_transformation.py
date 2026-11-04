@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from _country_scope import read_country_ids
 
 IDX = pd.IndexSlice
 IDEES_RENAME = {"GR": "EL", "GB": "UK"}
@@ -103,7 +102,7 @@ def prepare_coke_transformation(
 def main() -> None:
     prepare_coke_transformation(
         snakemake.input.eurostat_dir,
-        read_country_ids(snakemake.input.shapes),
+        Path(snakemake.input.country_ids).read_text().splitlines(),
         snakemake.output.transformation,
     )
 

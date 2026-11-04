@@ -1,18 +1,9 @@
-regions_file = rules.prepare_shapes.output.shapes
-
-spatial_key_inputs = {
-    "regions": regions_file,
-    "hotmaps": "<resources>/automatic/hotmaps.csv",
-}
-if config["spatial_disaggregation"]["population"]["enabled"]:
-    spatial_key_inputs["population"] = "<population>"
-if config["spatial_disaggregation"]["user_key"]["enabled"]:
-    spatial_key_inputs["user_key"] = "<user_key>"
-
-
 rule build_industrial_distribution_keys:
     input:
-        **spatial_key_inputs,
+        regions=rules.prepare_shapes.output.shapes,
+        hotmaps="<resources>/automatic/hotmaps.csv",
+        population=population_input,
+        user_key=user_key_input,
     output:
         distribution_keys="<industrial_distribution_keys>",
     log:

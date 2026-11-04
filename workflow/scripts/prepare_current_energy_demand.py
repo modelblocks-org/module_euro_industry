@@ -23,7 +23,6 @@ from pathlib import Path
 import country_converter as coco
 import numpy as np
 import pandas as pd
-from _country_scope import read_country_scope
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     COKE_CARRIERS,
@@ -719,9 +718,8 @@ def prepare(
 
 
 def main() -> None:
-    countries, source_countries = read_country_scope(
-        snakemake.input.shapes, snakemake.params.supported_countries
-    )
+    countries = Path(snakemake.input.country_ids).read_text().splitlines()
+    source_countries = Path(snakemake.input.source_country_ids).read_text().splitlines()
     prepare(
         countries=countries,
         source_countries=source_countries,

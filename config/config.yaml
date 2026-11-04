@@ -4,7 +4,7 @@ historical_calibration:
   # JRC-IDEES does not provide the chemical subsector disaggregation required
   # by the model. Ammonia is taken from USGS. HVC, chlorine and methanol are
   # allocated across countries using each country's residual non-ammonia
-  # basic-chemicals production.
+  # basic-chemicals production, preserving the calibration of the old model.
   # Note: this is a calibration convention, not a physical mass balance,
   # because JRC reports basic chemicals in ethylene-equivalent output.
   basic_chemicals_without_NH3_production_today: 69.0  # Mt/a
@@ -21,7 +21,8 @@ historical_calibration:
   MWh_elec_per_tMeOH: 0.167
   MWh_CH4_per_tMeOH: 10.25
 
-  # Represent ammonia demand as an ammonia carrier. Set false only if the historical baseline should instead
+  # Keep the legacy convention in which ammonia demand is represented as an
+  # ammonia carrier. Set false only if the historical baseline should instead
   # expose the reconstructed hydrogen/electricity inputs.
   ammonia: true
 

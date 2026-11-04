@@ -4,7 +4,7 @@ CURL_ARGS = "--fail --silent --show-error --location --retry 5 --retry-delay 5 -
 
 
 rule download_all:
-    """Download and extract all external datasets used by the workflow."""
+    """Download and extract all external datasets used by the original workflow."""
     input:
         "<resources>/automatic/eurostat.zip",
         "<resources>/automatic/jrc_idees.zip",
