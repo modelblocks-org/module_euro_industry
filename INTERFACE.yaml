@@ -24,9 +24,9 @@ pathvars:
 
         The optional `shape_class` column identifies the shape context. When
         present, only rows with `land` are processed; otherwise, all rows are used.
-    scenario:
-      default: "config/scenarios/{scenario}.yaml"
-      description: Industrial deployment scenario YAML.
+    projection_inputs:
+      default: "<resources>/user/projection_inputs"
+      description: Directory of projection input YAML files referenced by config.scenarios.
     population:
       default: "<resources>/user/{shapes}/population.csv"
       description: Optional population weights. Used when spatial_disaggregation.population.enabled is true.
@@ -69,4 +69,4 @@ pathvars:
       description: Completion marker for regional HTML maps written to its parent directory.
 wildcards:
   shapes: name of the supplied regional shape set
-  scenario: scenario YAML filename without the .yaml extension (in config/scenarios)
+  scenario: scenario name defined in config.scenarios

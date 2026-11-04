@@ -1,7 +1,9 @@
 rule project_production:
     input:
         reference_production="<historical_production_aggregated>",
-        scenario="<scenario>",
+        projection_input=lambda wildcards: (
+            f"<projection_inputs>/{config['scenarios'][wildcards.scenario]['projection_input']}"
+        ),
     output:
         production="<projected_production>",
     log:

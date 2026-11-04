@@ -315,7 +315,7 @@ def main() -> None:
     project_production(
         snakemake.input.reference_production,
         snakemake.params.reference_year,
-        snakemake.input.scenario,
+        snakemake.input.projection_input,
         snakemake.output.production,
     )
 

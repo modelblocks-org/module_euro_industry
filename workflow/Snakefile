@@ -10,7 +10,7 @@ min_version("9.19")
 
 pathvars:
     shapes="<resources>/user/{shapes}/shapes.parquet",
-    scenario="config/scenarios/{scenario}.yaml",
+    projection_inputs="<resources>/user/projection_inputs",
     population="<resources>/user/{shapes}/population.csv",
     user_key="<resources>/user/{shapes}/user_key.csv",
     historical_production="<results>/{shapes}/historical/production.parquet",

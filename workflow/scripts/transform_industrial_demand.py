@@ -821,7 +821,7 @@ def main() -> None:
         snakemake.params.reference_year,
         snakemake.params.processes,
         snakemake.params.production_routes,
-        snakemake.input.scenario,
+        snakemake.input.projection_input,
         snakemake.output.demand,
         snakemake.output.route_production,
     )

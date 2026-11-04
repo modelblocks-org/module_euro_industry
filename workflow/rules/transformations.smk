@@ -6,7 +6,9 @@ rule transform_industrial_demand:
         projected_production="<projected_production>",
         historical_production="<historical_production>",
         historical_energy="<historical_energy_demand>",
-        scenario="<scenario>",
+        projection_input=lambda wildcards: (
+            f"<projection_inputs>/{config['scenarios'][wildcards.scenario]['projection_input']}"
+        ),
     output:
         demand="<national_industrial_energy_demand>",
         route_production="<national_route_production>",

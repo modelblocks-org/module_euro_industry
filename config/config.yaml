@@ -1,3 +1,11 @@
+scenarios:
+  retain_max_electrification:
+    projection_input:
+      retain_max_electrification.yaml
+  industrial_relocation:
+    projection_input:
+      industrial_relocation.yaml
+
 historical_calibration:
   reference_year: 2019
 
@@ -70,7 +78,7 @@ technologies:
   # Reusable industrial technology definitions.
   #
   # This section defines WHAT technologies and new production routes are.
-  # Deployment assumptions (where, when, and how much) belong in the scenario file.
+  # Deployment assumptions (where, when, and how much) belong in the projection input file. (see examples)
   #
   # Existing-process replacement technologies use efficiency + carrier shares.
   # New-route processes use specific energy intensities in MWh/t product.
