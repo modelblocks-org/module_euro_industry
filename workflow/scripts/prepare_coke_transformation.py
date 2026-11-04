@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from _country_scope import read_country_ids
 
 IDX = pd.IndexSlice
 IDEES_RENAME = {"GR": "EL", "GB": "UK"}
@@ -32,6 +33,8 @@ def build_eurostat(input_eurostat: str | Path, countries: list[str]) -> pd.DataF
     countries_no_che = {IDEES_RENAME.get(country, country) for country in countries} - {
         "CH"
     }
+    if not countries_no_che:
+        return pd.DataFrame()
     func = partial(eurostat_per_country, input_eurostat)
     dfs = [func(country) for country in countries_no_che]
 
@@ -84,8 +87,13 @@ def prepare_coke_transformation(
     eurostat_dir: str | Path, countries: list[str], output_path: str | Path
 ) -> None:
     eurostat = build_eurostat(eurostat_dir, countries)
-    slicer = pd.IndexSlice[:, :, :, "Coke ovens", "Other sources", :]
-    coke = eurostat.loc[slicer, :].droplevel(level=[2, 3, 4, 5])
+    if eurostat.empty:
+        coke = pd.DataFrame(
+            index=pd.MultiIndex.from_arrays([[], []], names=["country", "year"])
+        )
+    else:
+        slicer = pd.IndexSlice[:, :, :, "Coke ovens", "Other sources", :]
+        coke = eurostat.loc[slicer, :].droplevel(level=[2, 3, 4, 5])
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,7 +103,7 @@ def prepare_coke_transformation(
 def main() -> None:
     prepare_coke_transformation(
         snakemake.input.eurostat_dir,
-        snakemake.params.countries,
+        read_country_ids(snakemake.input.shapes),
         snakemake.output.transformation,
     )
 

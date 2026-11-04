@@ -1,24 +1,22 @@
 """Future industrial route and process transformation layer."""
 
-technologies_file = config["technologies_file"]
-scenario_file = config["scenario_file"]
-
 
 rule transform_industrial_demand:
     input:
-        projected_production="results/projections/production.parquet",
-        historical_production="results/historical/production.parquet",
-        historical_energy="results/historical/energy_demand.parquet",
-        technologies=technologies_file,
-        scenario=scenario_file,
+        projected_production="<projected_production>",
+        historical_production="<historical_production>",
+        historical_energy="<historical_energy_demand>",
+        scenario="<scenario>",
     output:
-        demand="results/demand/industrial_energy_demand.parquet",
-        route_production="results/demand/route_production.parquet",
+        demand="<national_industrial_energy_demand>",
+        route_production="<national_route_production>",
     log:
-        "logs/demand/transform_industrial_demand.log",
+        "<logs>/{shapes}/demand/transform_industrial_demand.log",
     conda:
         "../envs/module.yaml"
     params:
+        processes=config["technologies"]["processes"],
+        production_routes=config["technologies"]["production_routes"],
         reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/transform_industrial_demand.py"
@@ -28,6 +26,6 @@ rule demand_all:
     input:
         rules.transform_industrial_demand.output,
     output:
-        touch("results/demand/.demand_complete"),
+        touch("<results>/{shapes}/demand/.demand_complete"),
     conda:
         "../envs/module.yaml"

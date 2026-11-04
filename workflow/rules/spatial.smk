@@ -1,30 +1,25 @@
-regions_file = config["spatial_disaggregation"]["regions_file"]
-
-population_file = config["spatial_disaggregation"]["population"]["file"]
-user_key_file = config["spatial_disaggregation"]["user_key"]["file"]
+regions_file = rules.prepare_shapes.output.shapes
 
 spatial_key_inputs = {
     "regions": regions_file,
-    "hotmaps": "resources/automatic/hotmaps.csv",
+    "hotmaps": "<resources>/automatic/hotmaps.csv",
 }
-if population_file:
-    spatial_key_inputs["population"] = population_file
-if user_key_file:
-    spatial_key_inputs["user_key"] = user_key_file
+if config["spatial_disaggregation"]["population"]["enabled"]:
+    spatial_key_inputs["population"] = "<population>"
+if config["spatial_disaggregation"]["user_key"]["enabled"]:
+    spatial_key_inputs["user_key"] = "<user_key>"
 
 
 rule build_industrial_distribution_keys:
     input:
         **spatial_key_inputs,
     output:
-        distribution_keys="results/spatial/industrial_distribution_keys.parquet",
+        distribution_keys="<industrial_distribution_keys>",
     log:
-        "logs/spatial/build_industrial_distribution_keys.log",
+        "<logs>/{shapes}/spatial/build_industrial_distribution_keys.log",
     conda:
         "../envs/module.yaml"
     params:
-        region_id_column=config["spatial_disaggregation"]["region_id_column"],
-        country_column=config["spatial_disaggregation"]["country_column"],
         fallback_options=config["spatial_disaggregation"]["fallback_options"],
         population_region_column=config["spatial_disaggregation"]["population"][
             "region_column"
@@ -54,12 +49,12 @@ rule build_industrial_distribution_keys:
 
 rule disaggregate_industrial_energy_demand:
     input:
-        data="results/demand/industrial_energy_demand.parquet",
+        data="<national_industrial_energy_demand>",
         distribution_keys=rules.build_industrial_distribution_keys.output.distribution_keys,
     output:
-        data="results/spatial/industrial_energy_demand.parquet",
+        data="<industrial_energy_demand>",
     log:
-        "logs/spatial/disaggregate_industrial_energy_demand.log",
+        "<logs>/{shapes}/spatial/disaggregate_industrial_energy_demand.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -71,12 +66,12 @@ rule disaggregate_industrial_energy_demand:
 
 rule disaggregate_route_production:
     input:
-        data="results/demand/route_production.parquet",
+        data="<national_route_production>",
         distribution_keys=rules.build_industrial_distribution_keys.output.distribution_keys,
     output:
-        data="results/spatial/route_production.parquet",
+        data="<route_production>",
     log:
-        "logs/spatial/disaggregate_route_production.log",
+        "<logs>/{shapes}/spatial/disaggregate_route_production.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -91,6 +86,6 @@ rule spatial_all:
         rules.disaggregate_industrial_energy_demand.output,
         rules.disaggregate_route_production.output,
     output:
-        touch("results/spatial/.spatial_complete"),
+        touch("<results>/{shapes}/spatial/.spatial_complete"),
     conda:
         "../envs/module.yaml"

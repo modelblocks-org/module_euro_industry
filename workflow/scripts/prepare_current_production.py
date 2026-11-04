@@ -3,8 +3,7 @@
 The output stays close to JRC-IDEES: each JRC sector/activity is retained as a
 record, while production routes are only distinguished where JRC itself gives
 separate historical activity (steel and aluminium). Basic chemicals are
-replaced by the calibrated AMMONIA/HVC/CHLORINE/METHANOL activities used by the
-legacy workflow.
+replaced by calibrated AMMONIA/HVC/CHLORINE/METHANOL activities.
 """
 
 import sys
@@ -13,6 +12,7 @@ from pathlib import Path
 import country_converter as coco
 import numpy as np
 import pandas as pd
+from _country_scope import read_country_scope
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     JRC_INDUSTRY_SHEETS,
@@ -71,7 +71,7 @@ def find_physical_output(df: pd.DataFrame) -> slice:
 def get_energy_ratio(
     country: str, eurostat_dir: Path, jrc_dir: Path, year: int, ch_path: Path
 ) -> pd.Series:
-    """National/EU27 sector energy ratio used by the legacy non-EU proxy."""
+    """National/EU27 sector energy ratio used to infer non-EU production."""
     if country == "CH":
         energy = pd.read_csv(ch_path, index_col=0).dropna()
         energy = energy.rename(index=CH_MAPPING).groupby(level=0).sum()
@@ -178,7 +178,7 @@ def split_basic_chemicals(
     chlorine_production_today,
     methanol_production_today,
 ) -> pd.DataFrame:
-    """Apply the legacy historical chemical calibration in normalized records."""
+    """Apply the historical chemical calibration in normalized records."""
     mask = (production["sector"] == "CHI") & (
         production["commodity"] == "BASIC_CHEMICALS"
     )
@@ -193,8 +193,7 @@ def split_basic_chemicals(
         ammonia.loc[available, str(year_to_use)], errors="coerce"
     ).fillna(0.0)
 
-    # This intentionally preserves the legacy numerical calibration. JRC basic
-    # chemicals are reported as kt ethylene-equivalent while USGS ammonia is kt
+    # JRC basic chemicals are reported as kt ethylene-equivalent; USGS ammonia is kt
     # NH3; the subtraction/distribution is therefore a calibration convention,
     # not a physical mass balance.
     residual = (basic["production"] - ammonia_series).clip(lower=0.0)
@@ -254,6 +253,8 @@ def prepare_current_production(
     ammonia_path,
     output_path,
     aggregate_path,
+    target_countries=None,
+    source_output_path=None,
 ):
     year = int(reference_year)
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.values)
@@ -280,6 +281,12 @@ def prepare_current_production(
         ["country", "sector", "activity", "production_route"], inplace=True
     )
 
+    if source_output_path is not None:
+        Path(source_output_path).parent.mkdir(parents=True, exist_ok=True)
+        production.to_parquet(source_output_path, index=False)
+    if target_countries is not None:
+        production = production.loc[production["country"].isin(target_countries)].copy()
+
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     production.to_parquet(output_path, index=False)
@@ -291,8 +298,11 @@ def prepare_current_production(
 
 
 def main() -> None:
+    countries, source_countries = read_country_scope(
+        snakemake.input.shapes, snakemake.params.supported_countries
+    )
     prepare_current_production(
-        snakemake.params.countries,
+        source_countries,
         snakemake.params.reference_year,
         snakemake.params.basic_chemicals_without_NH3_production_today,
         snakemake.params.HVC_production_today,
@@ -304,6 +314,8 @@ def main() -> None:
         snakemake.input.ammonia_production,
         snakemake.output.production,
         snakemake.output.aggregated,
+        target_countries=countries,
+        source_output_path=snakemake.output.source_production,
     )
 
 

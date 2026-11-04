@@ -3,15 +3,27 @@ from snakemake.utils import min_version
 
 min_version("9.19")
 
-# FIXME: define and use pathvars to fit INTERFACE.yaml requirements.
 # !!!!! IMPORTANT !!!!!
 # Define pathvars for all user resource files and result files
 # This allows users to re-wire how the module is used in their workflow with ease.
-# pathvars:
-#     # User resources
-#     shapes="<resources>/user/{shapes}/shapes.parquet",
-#     # Module results
-#     combined_text="<results>/something.parquet"
+
+
+pathvars:
+    shapes="<resources>/user/{shapes}/shapes.parquet",
+    scenario="config/scenarios/industrial_relocation.yaml",
+    population="<resources>/user/{shapes}/population.csv",
+    user_key="<resources>/user/{shapes}/user_key.csv",
+    historical_production="<results>/{shapes}/historical/production.parquet",
+    historical_production_aggregated="<results>/{shapes}/historical/production_aggregated.parquet",
+    historical_energy_demand="<results>/{shapes}/historical/energy_demand.parquet",
+    projected_production="<results>/{shapes}/projections/production.parquet",
+    national_industrial_energy_demand="<results>/{shapes}/demand/industrial_energy_demand.parquet",
+    national_route_production="<results>/{shapes}/demand/route_production.parquet",
+    industrial_distribution_keys="<results>/{shapes}/spatial/industrial_distribution_keys.parquet",
+    industrial_energy_demand="<results>/{shapes}/spatial/industrial_energy_demand.parquet",
+    route_production="<results>/{shapes}/spatial/route_production.parquet",
+    plots="<results>/{shapes}/plots/.plots_complete",
+    maps="<results>/{shapes}/maps/.maps_complete",
 
 
 # Load the example configuration. This will be overridden by users.
@@ -36,11 +48,13 @@ include: "rules/visualizations.smk"
 include: "rules/spatial.smk"
 
 
-# FIXME: assess if there are any files that need to be called via source_path
 # Add additional files to be delivered alongside the workflow here.
 # This is needed e.g. for python code files that are never
 # explicitly used as a script or input in a snakemake rule.
-# e.g.: workflow.source_path("scripts/_utils.py")
+# Imported Python helpers must also be available to remotely loaded scripts.
+workflow.source_path("scripts/_country_scope.py")
+workflow.source_path("scripts/_industry_schema.py")
+workflow.source_path("scripts/build_spatial_distribution_keys.py")
 
 
 rule all:

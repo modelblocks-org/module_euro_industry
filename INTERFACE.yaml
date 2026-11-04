@@ -1,6 +1,5 @@
 # Module Input-Output structure for automated docs generation
 convention_version: v1.0.0
-
 pathvars:
   snakemake_defaults:
     logs:
@@ -8,43 +7,65 @@ pathvars:
       description: location of snakemake log files.
     resources:
       default: "<resources>"
-      description: "location of module resource (input) files."
+      description: location of module resource files.
     results:
       default: "<results>"
-      description: "location of module result (output) files."
+      description: location of module result files.
   user_resources:
-    user_message:
-      default: "<resources>/user/user_message.md"
-      description: Example file emulating external files requested from a user.
-  results:
-    combined_text:
-      default: "<results>/combined_text.md"
-      description: Example file emulating module results.
+    shapes:
+      default: "<resources>/user/{shapes}/shapes.parquet"
+      description: |
+        Region-specific polygons to process. The GeoParquet file must have a
+        defined coordinate reference system (CRS) and include these columns:
 
-# Wildcard example:
-#
-# pathvars:
-#   snakemake_defaults:
-#     logs:
-#       default: "<logs>"
-#       description: location of rule log files.
-#     resources:
-#       default: "<resources>"
-#       description: "location of module resource files."
-#     results:
-#       default: "<results>"
-#       description: "location of module results."
-#   user_resources:
-#     shapes:
-#       default: "<resources>/user/{shapes}/shapes.parquet"
-#       description: region-specific polygons to process.
-#     proxy:
-#       default: "<resources>/user/proxy.tiff"
-#       description: global proxy raster file.
-#   results:
-#     capacity:
-#       default: "<results>/{shapes}/{scenario}/capacity.parquet"
-#       description: Module results
-# wildcards:
-#   shapes: resolution case
-#   scenario: configured scenario case
+        - `shape_id`: unique identifier for each output region.
+        - `country_id`: ISO 3166-1 alpha-3 or alpha-2 country code, or a recognized country name. Values are normalized to alpha-2 codes.
+        - `geometry`: polygon geometry.
+
+        The optional `shape_class` column identifies the shape context. When
+        present, only rows with `land` are processed; otherwise, all rows are used.
+    scenario:
+      default: "config/scenarios/industrial_relocation.yaml"
+      description: Industrial deployment scenario YAML.
+    population:
+      default: "<resources>/user/{shapes}/population.csv"
+      description: Optional population weights; used when spatial_disaggregation.population.enabled is true.
+    user_key:
+      default: "<resources>/user/{shapes}/user_key.csv"
+      description: Optional regional weights; used when spatial_disaggregation.user_key.enabled is true.
+  results:
+    historical_production:
+      default: "<results>/{shapes}/historical/production.parquet"
+      description: Historical industrial production by route.
+    historical_production_aggregated:
+      default: "<results>/{shapes}/historical/production_aggregated.parquet"
+      description: Historical industrial production aggregated by commodity.
+    historical_energy_demand:
+      default: "<results>/{shapes}/historical/energy_demand.parquet"
+      description: Historical industrial energy demand.
+    projected_production:
+      default: "<results>/{shapes}/projections/production.parquet"
+      description: Projected national industrial production.
+    national_industrial_energy_demand:
+      default: "<results>/{shapes}/demand/industrial_energy_demand.parquet"
+      description: National industrial energy demand after transformation.
+    national_route_production:
+      default: "<results>/{shapes}/demand/route_production.parquet"
+      description: National industrial production by route after transformation.
+    industrial_distribution_keys:
+      default: "<results>/{shapes}/spatial/industrial_distribution_keys.parquet"
+      description: Regional industrial distribution weights.
+    industrial_energy_demand:
+      default: "<results>/{shapes}/spatial/industrial_energy_demand.parquet"
+      description: Regional industrial energy demand.
+    route_production:
+      default: "<results>/{shapes}/spatial/route_production.parquet"
+      description: Regional industrial production by route.
+    plots:
+      default: "<results>/{shapes}/plots/.plots_complete"
+      description: Completion marker for national result plots written to its parent directory.
+    maps:
+      default: "<results>/{shapes}/maps/.maps_complete"
+      description: Completion marker for regional HTML maps written to its parent directory.
+wildcards:
+  shapes: name of the supplied regional shape set

@@ -23,6 +23,7 @@ from pathlib import Path
 import country_converter as coco
 import numpy as np
 import pandas as pd
+from _country_scope import read_country_scope
 from _industry_schema import (
     CHEMICAL_DEFINITIONS,
     COKE_CARRIERS,
@@ -626,6 +627,7 @@ def prepare(
     production_path: str | Path,
     coke_path: str | Path,
     output_path: str | Path,
+    source_countries: list[str] | None = None,
 ) -> None:
     year = int(reference_year)
     jrc_dir = Path(jrc_dir)
@@ -633,7 +635,7 @@ def prepare(
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.tolist())
 
     frames = []
-    for country in countries:
+    for country in source_countries if source_countries is not None else countries:
         if country not in eu27:
             continue
         try:
@@ -649,6 +651,8 @@ def prepare(
 
     inferred = infer_non_eu_demand(eu_demand, production, countries, eu27)
     demand = pd.concat([eu_demand, inferred], ignore_index=True)
+    demand = demand.loc[demand["country"].isin(countries)].copy()
+    production = production.loc[production["country"].isin(countries)].copy()
     demand = calibrate_basic_chemicals(
         demand,
         production,
@@ -715,8 +719,12 @@ def prepare(
 
 
 def main() -> None:
+    countries, source_countries = read_country_scope(
+        snakemake.input.shapes, snakemake.params.supported_countries
+    )
     prepare(
-        countries=snakemake.params.countries,
+        countries=countries,
+        source_countries=source_countries,
         reference_year=snakemake.params.reference_year,
         coke_oven_allocation=snakemake.params.coke_oven_allocation,
         ammonia_as_carrier=snakemake.params.ammonia,
