@@ -254,6 +254,8 @@ def prepare_current_production(
     ammonia_path,
     output_path,
     aggregate_path,
+    target_countries=None,
+    source_output_path=None,
 ):
     year = int(reference_year)
     eu27 = set(coco.CountryConverter().EU27as("ISO2").ISO2.values)
@@ -280,6 +282,12 @@ def prepare_current_production(
         ["country", "sector", "activity", "production_route"], inplace=True
     )
 
+    if source_output_path is not None:
+        Path(source_output_path).parent.mkdir(parents=True, exist_ok=True)
+        production.to_parquet(source_output_path, index=False)
+    if target_countries is not None:
+        production = production.loc[production["country"].isin(target_countries)].copy()
+
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     production.to_parquet(output_path, index=False)
@@ -291,8 +299,10 @@ def prepare_current_production(
 
 
 def main() -> None:
+    countries = Path(snakemake.input.country_ids).read_text().splitlines()
+    source_countries = Path(snakemake.input.source_country_ids).read_text().splitlines()
     prepare_current_production(
-        snakemake.params.countries,
+        source_countries,
         snakemake.params.reference_year,
         snakemake.params.basic_chemicals_without_NH3_production_today,
         snakemake.params.HVC_production_today,
@@ -304,6 +314,8 @@ def main() -> None:
         snakemake.input.ammonia_production,
         snakemake.output.production,
         snakemake.output.aggregated,
+        target_countries=countries,
+        source_output_path=snakemake.output.source_production,
     )
 
 

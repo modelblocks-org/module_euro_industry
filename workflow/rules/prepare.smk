@@ -1,24 +1,41 @@
-"""Prepare the historical/current industrial calibration data."""
+"""Prepare shape-specific historical industrial calibration data."""
+
+
+rule prepare_shapes:
+    input:
+        shapes="<shapes>",
+    output:
+        shapes="<resources>/automatic/shapes/{shapes}/land_shapes.parquet",
+        country_ids="<resources>/automatic/shapes/{shapes}/country_ids.txt",
+        source_country_ids="<resources>/automatic/shapes/{shapes}/source_country_ids.txt",
+    log:
+        "<logs>/{shapes}/prepare_shapes.log",
+    conda:
+        "../envs/module.yaml"
+    params:
+        supported_countries=internal["calibration_countries"],
+    script:
+        "../scripts/prepare_shapes.py"
 
 
 rule prepare_all:
     input:
-        "results/historical/production.parquet",
-        "results/historical/production_aggregated.parquet",
-        "results/historical/energy_demand.parquet",
+        "<historical_production>",
+        "<historical_production_aggregated>",
+        "<historical_energy_demand>",
     output:
-        touch("results/historical/.prepare_complete"),
+        touch("<results>/{shapes}/historical/.prepare_complete"),
     conda:
         "../envs/module.yaml"
 
 
 rule prepare_ammonia_production:
     input:
-        usgs="resources/automatic/ammonia/usgs.xlsx",
+        usgs="<resources>/automatic/ammonia/usgs.xlsx",
     output:
-        production="resources/automatic/prepare/ammonia_production.parquet",
+        production="<resources>/automatic/prepare/ammonia_production.parquet",
     log:
-        "logs/prepare/prepare_ammonia_production.log",
+        "<logs>/prepare/prepare_ammonia_production.log",
     conda:
         "../envs/module.yaml"
     message:
@@ -29,15 +46,14 @@ rule prepare_ammonia_production:
 
 rule prepare_coke_transformation:
     input:
-        eurostat_dir="resources/automatic/eurostat",
+        country_ids=rules.prepare_shapes.output.country_ids,
+        eurostat_dir="<resources>/automatic/eurostat",
     output:
-        transformation="resources/automatic/prepare/coke_transformation.parquet",
+        transformation="<resources>/automatic/shapes/{shapes}/coke_transformation.parquet",
     log:
-        "logs/prepare/prepare_coke_transformation.log",
+        "<logs>/{shapes}/prepare/prepare_coke_transformation.log",
     conda:
         "../envs/module.yaml"
-    params:
-        countries=config["countries"],
     message:
         "Prepare historical coke-oven transformation output from Eurostat."
     script:
@@ -46,19 +62,21 @@ rule prepare_coke_transformation:
 
 rule prepare_current_production:
     input:
-        jrc_dir="resources/automatic/jrc_idees",
-        eurostat_dir="resources/automatic/eurostat",
-        ch_industrial_production="resources/automatic/CHE_industry.csv",
+        country_ids=rules.prepare_shapes.output.country_ids,
+        source_country_ids=rules.prepare_shapes.output.source_country_ids,
+        jrc_dir="<resources>/automatic/jrc_idees",
+        eurostat_dir="<resources>/automatic/eurostat",
+        ch_industrial_production="<resources>/automatic/CHE_industry.csv",
         ammonia_production=rules.prepare_ammonia_production.output.production,
     output:
-        production="results/historical/production.parquet",
-        aggregated="results/historical/production_aggregated.parquet",
+        source_production="<resources>/automatic/shapes/{shapes}/source_production.parquet",
+        production="<historical_production>",
+        aggregated="<historical_production_aggregated>",
     log:
-        "logs/prepare/prepare_current_production.log",
+        "<logs>/{shapes}/prepare/prepare_current_production.log",
     conda:
         "../envs/module.yaml"
     params:
-        countries=config["countries"],
         reference_year=config["historical_calibration"]["reference_year"],
         basic_chemicals_without_NH3_production_today=config["historical_calibration"][
             "basic_chemicals_without_NH3_production_today"
@@ -78,17 +96,18 @@ rule prepare_current_production:
 
 rule prepare_current_energy_demand:
     input:
-        jrc_dir="resources/automatic/jrc_idees",
-        production=rules.prepare_current_production.output.production,
+        country_ids=rules.prepare_shapes.output.country_ids,
+        source_country_ids=rules.prepare_shapes.output.source_country_ids,
+        jrc_dir="<resources>/automatic/jrc_idees",
+        production=rules.prepare_current_production.output.source_production,
         coke=rules.prepare_coke_transformation.output.transformation,
     output:
-        energy_demand="results/historical/energy_demand.parquet",
+        energy_demand="<historical_energy_demand>",
     log:
-        "logs/prepare/prepare_current_energy_demand.log",
+        "<logs>/{shapes}/prepare/prepare_current_energy_demand.log",
     conda:
         "../envs/module.yaml"
     params:
-        countries=config["countries"],
         reference_year=config["historical_calibration"]["reference_year"],
         MWh_NH3_per_tNH3=config["historical_calibration"]["MWh_NH3_per_tNH3"],
         MWh_H2_per_tNH3_electrolysis=config["historical_calibration"][

@@ -1,49 +1,35 @@
-import yaml
-
-# Read visualization settings once when Snakemake parses the workflow.
-with open("config/visualization.yaml", "r", encoding="utf-8") as f:
-    visualization_cfg = yaml.safe_load(f)["visualization"]
-
-
-plots_output_dir = visualization_cfg["output_dir"]
-
-spatial_maps_cfg = visualization_cfg["spatial_maps"]
-
-maps_output_dir = spatial_maps_cfg["output_dir"]
-
-
 rule plot_results:
     input:
-        projected_production="results/projections/production.parquet",
-        route_production="results/demand/route_production.parquet",
-        energy_demand="results/demand/industrial_energy_demand.parquet",
-        visualization_config="config/visualization.yaml",
+        projected_production="<projected_production>",
+        route_production="<national_route_production>",
+        energy_demand="<national_industrial_energy_demand>",
     output:
-        touch(f"{plots_output_dir}/.plots_complete"),
+        touch("<plots>"),
     log:
-        "logs/plots/plot_results.log",
+        "<logs>/{shapes}/{scenario}/plots/plot_results.log",
     conda:
         "../envs/module.yaml"
+    params:
+        include_plots=config["visualization"]["include_plots"],
+        energy_layer=config["visualization"]["energy_layer"],
     script:
         "../scripts/plot_results.py"
 
 
 rule plot_spatial_maps:
     input:
-        regions=lambda wc: config["spatial_disaggregation"]["regions_file"],
-        route_production="results/spatial/route_production.parquet",
-        energy_demand="results/spatial/industrial_energy_demand.parquet",
-        visualization_config="config/visualization.yaml",
+        regions=rules.prepare_shapes.output.shapes,
+        route_production="<route_production>",
+        energy_demand="<industrial_energy_demand>",
     output:
-        touch(f"{maps_output_dir}/.maps_complete"),
+        touch("<maps>"),
     log:
-        "logs/plots/plot_spatial_maps.log",
+        "<logs>/{shapes}/{scenario}/plots/plot_spatial_maps.log",
     conda:
         "../envs/module.yaml"
     params:
-        output_dir=maps_output_dir,
-        region_id_column=config["spatial_disaggregation"]["region_id_column"],
-        years=config["spatial_disaggregation"]["years"],
+        include_plots=config["visualization"]["include_plots"],
+        energy_layer=config["visualization"]["energy_layer"],
     script:
         "../scripts/plot_spatial_maps.py"
 

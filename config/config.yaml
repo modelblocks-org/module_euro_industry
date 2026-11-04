@@ -1,39 +1,10 @@
-# Countries included in the historical calibration.
-countries:
-  - AL
-  - AT
-  - BA
-  - BE
-  - BG
-  - CH
-  - CZ
-  - DE
-  - DK
-  - EE
-  - ES
-  - FI
-  - FR
-  - GB
-  - GR
-  - HR
-  - HU
-  - IE
-  - IT
-  - LT
-  - LU
-  - LV
-  - ME
-  - MK
-  - NL
-  - 'NO'
-  - PL
-  - PT
-  - RO
-  - RS
-  - SE
-  - SI
-  - SK
-  - XK
+scenarios:
+  retain_max_electrification:
+    projection_input:
+      retain_max_electrification.yaml
+  industrial_relocation:
+    projection_input:
+      industrial_relocation.yaml
 
 historical_calibration:
   reference_year: 2019
@@ -67,15 +38,7 @@ historical_calibration:
   # steelworks (BF-BOF) in the historical calibration.
   coke_oven_allocation: 0.75
 
-# defining the scenarios
-technologies_file: config/technologies.yaml
-scenario_file: config/scenarios/retain_max_electrification.yaml
-
 spatial_disaggregation:
-  regions_file: resources/user/shapes.parquet
-  region_id_column: shape_id
-  country_column: country_id
-
   # Optional subset of years to regionalize. Set to null to keep all years.
   years:
     - 2030
@@ -96,18 +59,90 @@ spatial_disaggregation:
   # Optional population-based regional key. The weights do not need to sum to
   # one; they are renormalized to the regions present in the GeoParquet.
   population:
-    file: null  # Set to a population CSV path to enable this fallback.
+    enabled: false  # Supply the population CSV through the population pathvar.
     region_column: name
     country_column: ct
     weight_column: fraction
     source_name: population
 
-  # Optional arbitrary user-provided regional distribution key. Set file: null
-  # when it is not used. It follows the same three-column concept as population.
+  # Optional regional key, supplied through the user_key pathvar.
+  # It follows the same three-column concept as population.
   user_key:
-    file: null
-    # file: resources/user/my_regional_key.csv
+    enabled: false
     region_column: region
     country_column: country
     weight_column: share
     source_name: user_key
+
+technologies:
+  # Reusable industrial technology definitions.
+  #
+  # This section defines WHAT technologies and new production routes are.
+  # Deployment assumptions (where, when, and how much) belong in the projection input file. (see examples)
+  #
+  # Existing-process replacement technologies use efficiency + carrier shares.
+  # New-route processes use specific energy intensities in MWh/t product.
+
+  processes:
+    industrial_heat_pump:
+      efficiency: 3.0
+      carriers:
+        ELEC:
+          share: 1.0
+    electric_boiler:
+      efficiency: 0.98
+      carriers:
+        ELEC:
+          share: 1.0
+    electric_process_heat:
+      efficiency: 0.95
+      carriers:
+        ELEC:
+          share: 1.0
+    electric_dryer:
+      efficiency: 0.95
+      carriers:
+        ELEC:
+          share: 1.0
+    electric_furnace:
+      efficiency: 0.95
+      carriers:
+        ELEC:
+          share: 1.0
+    hydrogen_dri:
+      intensities:
+        HYDROGEN: 1.8
+        ELEC: 0.1
+    new_eaf:
+      intensities:
+        ELEC: 0.65
+    electric_hvc_conversion:
+      intensities:
+        ELEC: 2.0
+  production_routes:
+    H2_DRI_EAF:
+      commodity: STEEL
+      inherit_use_types_from: null
+      processes:
+      - hydrogen_dri
+      - new_eaf
+    ELECTRIC_HVC:
+      commodity: HVC
+      inherit_use_types_from:
+        production_route: BASE_ROUTE
+        use_types:
+        - feedstock
+      processes:
+      - electric_hvc_conversion
+
+visualization:
+  energy_layer: FEC  # FEC or UED, shared by energy charts and maps.
+  include_plots:
+    - production_overview
+    - production_route
+    - energy_by_sector_map
+    - energy_by_carrier_map
+    - energy_by_carrier
+    - energy_by_commodity
+    - production_map
+    - energy_by_commodity_map
