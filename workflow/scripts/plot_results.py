@@ -8,7 +8,7 @@ import yaml
 
 def _load_cfg(path: str | Path) -> dict:
     with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f).get("visualization", {})
+        return yaml.safe_load(f)["visualization"]
 
 
 def _filter_scope(df: pd.DataFrame, countries, commodities) -> pd.DataFrame:
@@ -102,22 +102,25 @@ def plot_route_production(routes: pd.DataFrame, output_dir: Path) -> None:
         _write_html(fig, output_dir / f"production_routes_{commodity}.html")
 
 
-def _filter_energy(demand: pd.DataFrame, energy_cfg: dict) -> pd.DataFrame:
+def _filter_energy(
+    demand: pd.DataFrame, energy_layer: str | None, use_type: str | None
+) -> pd.DataFrame:
     out = demand.copy()
-    layer = energy_cfg.get("energy_layer", "FEC")
-    use_type = energy_cfg.get("use_type", "final_energy")
 
-    if layer:
-        out = out[out["energy_layer"].eq(layer)]
+    if energy_layer:
+        out = out[out["energy_layer"].eq(energy_layer)]
     if use_type:
         out = out[out["use_type"].eq(use_type)]
     return out
 
 
 def plot_energy_by_carrier(
-    demand: pd.DataFrame, output_dir: Path, energy_cfg: dict
+    demand: pd.DataFrame,
+    output_dir: Path,
+    energy_layer: str | None,
+    use_type: str | None,
 ) -> None:
-    data = _filter_energy(demand, energy_cfg)
+    data = _filter_energy(demand, energy_layer, use_type)
     if data.empty:
         return
 
@@ -133,16 +136,19 @@ def plot_energy_by_carrier(
         y="demand",
         color="carrier",
         labels={"year": "Year", "demand": "Energy demand", "carrier": "Carrier"},
-        title=f"Industrial energy demand by carrier ({energy_cfg.get('energy_layer', 'FEC')})",
+        title=f"Industrial energy demand by carrier ({energy_layer})",
     )
     fig.update_layout(hovermode="x unified")
     _write_html(fig, output_dir / "energy_demand_by_carrier.html")
 
 
 def plot_energy_by_commodity(
-    demand: pd.DataFrame, output_dir: Path, energy_cfg: dict
+    demand: pd.DataFrame,
+    output_dir: Path,
+    energy_layer: str | None,
+    use_type: str | None,
 ) -> None:
-    data = _filter_energy(demand, energy_cfg)
+    data = _filter_energy(demand, energy_layer, use_type)
     if data.empty:
         return
 
@@ -158,7 +164,7 @@ def plot_energy_by_commodity(
         y="demand",
         color="commodity",
         labels={"year": "Year", "demand": "Energy demand", "commodity": "Commodity"},
-        title=f"Industrial energy demand by commodity ({energy_cfg.get('energy_layer', 'FEC')})",
+        title=f"Industrial energy demand by commodity ({energy_layer})",
     )
     fig.update_layout(hovermode="x unified")
     _write_html(fig, output_dir / "energy_demand_by_commodity.html")
@@ -180,12 +186,12 @@ def _clean_standard_outputs(output_dir: Path) -> None:
 
 def main() -> None:
     cfg = _load_cfg(snakemake.input.visualization_config)
-    output_dir = Path(cfg.get("output_dir", "results/plots"))
+    output_dir = Path(cfg["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
     _clean_standard_outputs(output_dir)
 
-    countries = cfg.get("countries")
-    commodities = cfg.get("commodities")
+    countries = cfg["countries"]
+    commodities = cfg["commodities"]
 
     projected = _filter_scope(
         pd.read_parquet(snakemake.input.projected_production), countries, commodities
@@ -197,17 +203,21 @@ def main() -> None:
         pd.read_parquet(snakemake.input.energy_demand), countries, commodities
     )
 
-    production_cfg = cfg.get("production", {})
-    energy_cfg = cfg.get("energy", {})
+    production_cfg = cfg["production"]
+    energy_cfg = cfg["energy"]
 
-    if production_cfg.get("make_overview", True):
+    if production_cfg["make_overview"]:
         plot_production_overview(projected, output_dir)
-    if production_cfg.get("make_route_plots", True):
+    if production_cfg["make_route_plots"]:
         plot_route_production(routes, output_dir)
-    if energy_cfg.get("make_carrier_plot", True):
-        plot_energy_by_carrier(demand, output_dir, energy_cfg)
-    if energy_cfg.get("make_commodity_plot", True):
-        plot_energy_by_commodity(demand, output_dir, energy_cfg)
+    if energy_cfg["make_carrier_plot"]:
+        plot_energy_by_carrier(
+            demand, output_dir, energy_cfg["energy_layer"], energy_cfg["use_type"]
+        )
+    if energy_cfg["make_commodity_plot"]:
+        plot_energy_by_commodity(
+            demand, output_dir, energy_cfg["energy_layer"], energy_cfg["use_type"]
+        )
 
     marker = output_dir / ".plots_complete"
     marker.touch()

@@ -13,16 +13,7 @@ import yaml
 
 def _load_yaml(path: str | Path) -> dict:
     with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
-
-
-def _load_cfg(visualization_config: str, model_config: str) -> dict:
-    vis = _load_yaml(visualization_config).get("visualization", {})
-    model = _load_yaml(model_config)
-    return {
-        "visualization": vis,
-        "spatial_disaggregation": model.get("spatial_disaggregation", {}),
-    }
+        return yaml.safe_load(f)
 
 
 def _region_column(df: pd.DataFrame, configured: str | None = None) -> str:
@@ -57,9 +48,8 @@ def _normalise_region_column(
     return out
 
 
-def _prepare_regions(path: str, cfg: dict) -> gpd.GeoDataFrame:
+def _prepare_regions(path: str, region_col: str) -> gpd.GeoDataFrame:
     regions = gpd.read_parquet(path)
-    region_col = cfg.get("spatial_disaggregation", {}).get("region_id_column", "name")
     if region_col not in regions.columns:
         raise ValueError(f"GeoParquet region id column '{region_col}' not found.")
     regions = regions.copy()
@@ -69,11 +59,7 @@ def _prepare_regions(path: str, cfg: dict) -> gpd.GeoDataFrame:
     return regions.to_crs("EPSG:4326")
 
 
-def _selected_years(cfg: dict, available_years) -> list[int]:
-    spatial_maps = cfg.get("visualization", {}).get("spatial_maps", {})
-    years = spatial_maps.get("years")
-    if years is None:
-        years = cfg.get("spatial_disaggregation", {}).get("years")
+def _selected_years(years: list[int] | None, available_years) -> list[int]:
     available = sorted({int(y) for y in available_years if pd.notna(y)})
     if years is None:
         return available
@@ -264,14 +250,20 @@ def _base_region_layer(regions: gpd.GeoDataFrame):
 
 
 def make_energy_pie_maps(
-    energy: pd.DataFrame, regions: gpd.GeoDataFrame, cfg: dict, outdir: Path
+    energy: pd.DataFrame,
+    regions: gpd.GeoDataFrame,
+    outdir: Path,
+    *,
+    years: list[int] | None,
+    energy_layer: str | None,
+    use_types: list[str] | None,
+    max_slices: int,
+    radius_factor: float,
+    energy_by_sector_pies: bool,
+    energy_by_commodity_pies: bool,
+    energy_by_carrier_pies: bool,
 ) -> None:
-    vis = cfg.get("visualization", {}).get("spatial_maps", {})
-    plots = vis.get("plots", {})
-    energy_layer = vis.get("energy_layer", "FEC")
-    use_types = vis.get("use_types", ["final_energy"])
-    max_slices = vis.get("max_pie_slices", 10)
-    radius_factor = float(vis.get("pie_radius_factor", 0.45))
+    radius_factor = float(radius_factor)
     if radius_factor <= 0:
         raise ValueError("visualization.spatial_maps.pie_radius_factor must be > 0")
 
@@ -283,16 +275,16 @@ def make_energy_pie_maps(
     if use_types and "use_type" in data.columns:
         data = data[data["use_type"].isin(use_types)]
 
-    years = _selected_years(cfg, data["year"].dropna().astype(int).unique())
+    years = _selected_years(years, data["year"].dropna().astype(int).unique())
     centres = _region_centres(regions)
 
     sector_col = "sector_name" if "sector_name" in data.columns else "sector"
     specs = []
-    if plots.get("energy_by_sector_pies", True):
+    if energy_by_sector_pies:
         specs.append((sector_col, "sector"))
-    if plots.get("energy_by_commodity_pies", False):
+    if energy_by_commodity_pies:
         specs.append(("commodity", "commodity"))
-    if plots.get("energy_by_carrier_pies", False):
+    if energy_by_carrier_pies:
         specs.append(("carrier", "carrier"))
 
     for year in years:
@@ -350,10 +342,13 @@ def _choropleth_color(values: pd.Series) -> list[list[int]]:
 
 
 def make_production_maps(
-    route_prod: pd.DataFrame, regions: gpd.GeoDataFrame, cfg: dict, outdir: Path
+    route_prod: pd.DataFrame,
+    regions: gpd.GeoDataFrame,
+    outdir: Path,
+    *,
+    years: list[int] | None,
+    commodities: list[str] | None,
 ) -> None:
-    vis = cfg.get("visualization", {}).get("spatial_maps", {})
-    commodities = vis.get("production_commodities")
 
     data = route_prod.copy()
     data["year"] = pd.to_numeric(data["year"], errors="coerce")
@@ -363,7 +358,7 @@ def make_production_maps(
     if commodities:
         data = data[data["commodity"].isin(commodities)]
 
-    years = _selected_years(cfg, data["year"].dropna().astype(int).unique())
+    years = _selected_years(years, data["year"].dropna().astype(int).unique())
 
     for year in years:
         year_data = data[data["year"] == year]
@@ -422,15 +417,19 @@ def make_production_maps(
 
 
 def main() -> None:
-    cfg = _load_cfg(snakemake.input.visualization_config, snakemake.input.model_config)
-    vis = cfg.get("visualization", {}).get("spatial_maps", {})
-    if not vis.get("enabled", True):
+    vis = _load_yaml(snakemake.input.visualization_config)["visualization"][
+        "spatial_maps"
+    ]
+    years = vis["years"]
+    if years is None:
+        years = snakemake.params.years
+    if not vis["enabled"]:
         return
 
-    regions = _prepare_regions(snakemake.input.regions, cfg)
-    configured_region_col = cfg.get("spatial_disaggregation", {}).get(
-        "region_id_column"
+    regions = _prepare_regions(
+        snakemake.input.regions, snakemake.params.region_id_column
     )
+    configured_region_col = snakemake.params.region_id_column
 
     route_prod = _normalise_region_column(
         pd.read_parquet(snakemake.input.route_production),
@@ -445,20 +444,37 @@ def main() -> None:
 
     outdir = Path(snakemake.params.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
-    if vis.get("clean_output_dir", True):
+    if vis["clean_output_dir"]:
         for p in outdir.glob("*.html"):
             p.unlink()
 
-    plots = vis.get("plots", {})
-    if plots.get("production_maps", True):
-        make_production_maps(route_prod, regions, cfg, outdir)
+    if vis["plots"]["production_maps"]:
+        make_production_maps(
+            route_prod,
+            regions,
+            outdir,
+            years=years,
+            commodities=vis["production_commodities"],
+        )
 
     if (
-        plots.get("energy_by_sector_pies", True)
-        or plots.get("energy_by_commodity_pies", False)
-        or plots.get("energy_by_carrier_pies", False)
+        vis["plots"]["energy_by_sector_pies"]
+        or vis["plots"]["energy_by_commodity_pies"]
+        or vis["plots"]["energy_by_carrier_pies"]
     ):
-        make_energy_pie_maps(energy, regions, cfg, outdir)
+        make_energy_pie_maps(
+            energy,
+            regions,
+            outdir,
+            years=years,
+            energy_layer=vis["energy_layer"],
+            use_types=vis["use_types"],
+            max_slices=vis["max_pie_slices"],
+            radius_factor=vis["pie_radius_factor"],
+            energy_by_sector_pies=vis["plots"]["energy_by_sector_pies"],
+            energy_by_commodity_pies=vis["plots"]["energy_by_commodity_pies"],
+            energy_by_carrier_pies=vis["plots"]["energy_by_carrier_pies"],
+        )
 
     (outdir / ".maps_complete").touch()
 

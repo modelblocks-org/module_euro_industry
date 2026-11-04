@@ -5,7 +5,6 @@ import country_converter as coco
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import yaml
 
 HOTMAPS_CATEGORY_BY_SECTOR = {
     "ISI": "Iron and steel",
@@ -127,7 +126,13 @@ def normalized_region_key(
     return by_region.reindex(region_index, fill_value=0.0)
 
 
-def read_generic_key(path: str, cfg: dict, default_source_name: str) -> pd.DataFrame:
+def read_generic_key(
+    path: str,
+    region_column: str,
+    country_column: str,
+    weight_column: str,
+    source_name: str,
+) -> pd.DataFrame:
     """Read a user-provided regional weighting table.
 
     Expected columns are configured through region_column, country_column and
@@ -135,22 +140,21 @@ def read_generic_key(path: str, cfg: dict, default_source_name: str) -> pd.DataF
     performed after restricting to regions in the supplied GeoParquet.
     """
     df = pd.read_csv(path, low_memory=False)
-    region_col = cfg.get("region_column", "name")
-    country_col = cfg.get("country_column", "ct")
-    weight_col = cfg.get("weight_column", "fraction")
 
-    missing = [c for c in (region_col, country_col, weight_col) if c not in df.columns]
+    missing = [
+        c for c in (region_column, country_column, weight_column) if c not in df.columns
+    ]
     if missing:
         raise ValueError(
             f"Generic spatial key file {path} is missing configured columns: {missing}"
         )
 
-    out = df[[region_col, country_col, weight_col]].copy()
+    out = df[[region_column, country_column, weight_column]].copy()
     out.columns = ["region", "country", "weight"]
     out["region"] = out["region"].astype(str)
     out["country"] = out["country"].astype(str).str.upper()
     out["weight"] = pd.to_numeric(out["weight"], errors="coerce")
-    out["source_name"] = cfg.get("source_name", default_source_name)
+    out["source_name"] = source_name
     return out
 
 
@@ -291,15 +295,9 @@ def build_keys(
 
 
 def main() -> None:
-    with open(snakemake.params.config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-    cfg = config.get("spatial_disaggregation", {})
-
-    region_id_column = cfg.get("region_id_column", "name")
-    country_column = cfg.get("country_column")
-    fallback_options = cfg.get(
-        "fallback_options", ["generic_industry", "population", "uniform"]
-    )
+    region_id_column = snakemake.params.region_id_column
+    country_column = snakemake.params.country_column
+    fallback_options = snakemake.params.fallback_options
     if not isinstance(fallback_options, list) or not fallback_options:
         raise ValueError(
             "spatial_disaggregation.fallback_options must be a non-empty list."
@@ -313,16 +311,20 @@ def main() -> None:
     if snakemake.input.get("population"):
         population = read_generic_key(
             snakemake.input.get("population"),
-            cfg.get("population", {}),
-            default_source_name="population",
+            region_column=snakemake.params.population_region_column,
+            country_column=snakemake.params.population_country_column,
+            weight_column=snakemake.params.population_weight_column,
+            source_name=snakemake.params.population_source_name,
         )
 
     user_key = None
     if snakemake.input.get("user_key"):
         user_key = read_generic_key(
             snakemake.input.get("user_key"),
-            cfg.get("user_key", {}),
-            default_source_name="user_key",
+            region_column=snakemake.params.user_key_region_column,
+            country_column=snakemake.params.user_key_country_column,
+            weight_column=snakemake.params.user_key_weight_column,
+            source_name=snakemake.params.user_key_source_name,
         )
 
     categories = sorted(
@@ -347,8 +349,8 @@ def main() -> None:
         user_key=user_key,
     )
 
-    Path(snakemake.output[0]).parent.mkdir(parents=True, exist_ok=True)
-    keys.to_parquet(snakemake.output[0], index=False)
+    Path(snakemake.output.distribution_keys).parent.mkdir(parents=True, exist_ok=True)
+    keys.to_parquet(snakemake.output.distribution_keys, index=False)
 
 
 if __name__ == "__main__":

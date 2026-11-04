@@ -35,7 +35,8 @@ def prepare_ammonia_production(input_path: str | Path, output_path: str | Path) 
 
 
 def main() -> None:
-    prepare_ammonia_production(snakemake.input.usgs, snakemake.output[0])
+    """Prepare ammonia production using the Snakemake inputs and output."""
+    prepare_ammonia_production(snakemake.input.usgs, snakemake.output.production)
 
 
 if __name__ == "__main__":

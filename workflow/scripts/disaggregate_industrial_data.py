@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import yaml
 from build_spatial_distribution_keys import spatial_category
 
 
@@ -149,11 +148,7 @@ def disaggregate(
 
 
 def main() -> None:
-    with open(snakemake.input.config, encoding="utf-8") as f:
-        cfg = yaml.safe_load(f) or {}
-
-    spatial_cfg = cfg.get("spatial_disaggregation", {})
-    years = spatial_cfg.get("years")
+    years = snakemake.params.years
     if years is not None:
         years = [int(y) for y in years]
 
@@ -168,8 +163,8 @@ def main() -> None:
     out = disaggregate(
         df, distribution_keys, snakemake.params.value_column, years=years
     )
-    Path(snakemake.output[0]).parent.mkdir(parents=True, exist_ok=True)
-    out.to_parquet(snakemake.output[0], index=False)
+    Path(snakemake.output.data).parent.mkdir(parents=True, exist_ok=True)
+    out.to_parquet(snakemake.output.data, index=False)
 
 
 if __name__ == "__main__":

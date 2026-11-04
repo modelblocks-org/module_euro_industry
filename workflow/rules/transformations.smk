@@ -19,7 +19,7 @@ rule transform_industrial_demand:
     conda:
         "../envs/module.yaml"
     params:
-        config_path="config/config.yaml",
+        reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/transform_industrial_demand.py"
 

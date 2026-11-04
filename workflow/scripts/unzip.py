@@ -36,7 +36,7 @@ def unzip_archive(input_path: str | Path, output_path: str | Path) -> None:
 
 
 def main() -> None:
-    unzip_archive(snakemake.input[0], snakemake.output[0])
+    unzip_archive(snakemake.input[0], snakemake.output.extracted)
 
 
 if __name__ == "__main__":

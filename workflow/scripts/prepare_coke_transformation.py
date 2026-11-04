@@ -94,7 +94,9 @@ def prepare_coke_transformation(
 
 def main() -> None:
     prepare_coke_transformation(
-        snakemake.input.eurostat_dir, snakemake.params.countries, snakemake.output[0]
+        snakemake.input.eurostat_dir,
+        snakemake.params.countries,
+        snakemake.output.transformation,
     )
 
 

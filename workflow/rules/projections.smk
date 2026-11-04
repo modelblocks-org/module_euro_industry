@@ -6,13 +6,13 @@ rule project_production:
         reference_production="results/historical/production_aggregated.parquet",
         scenario=scenario_file,
     output:
-        "results/projections/production.parquet",
+        production="results/projections/production.parquet",
     log:
         "logs/projections/project_production.log",
     conda:
         "../envs/module.yaml"
     params:
-        config_path="config/config.yaml",
+        reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/project_production.py"
 

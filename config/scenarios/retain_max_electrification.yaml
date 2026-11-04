@@ -8,6 +8,7 @@ name: retain_max_electrification
 description: Europe retains reference-year industrial production and maximizes technically
   plausible direct electrification.
 production_projection:
+  commodities: {}
   generic:
     2030: 1.0
     2040: 1.0
@@ -18,6 +19,7 @@ process_transformations:
   production_route: '*'
   process: LOW_ENTHALPY_HEAT
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.4
@@ -31,6 +33,7 @@ process_transformations:
   production_route: '*'
   process: DRYING
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.5
@@ -47,6 +50,7 @@ process_transformations:
   - PROCESS_STEAM
   - STEAM
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.6
@@ -63,6 +67,7 @@ process_transformations:
   - FURNACES
   - KILN
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.8
@@ -76,6 +81,7 @@ process_transformations:
   production_route: BASE_ROUTE
   process: PAPER_MACHINE
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.7
@@ -91,6 +97,7 @@ process_transformations:
   - PREPARATION
   - FINISHING
   use_type: final_energy
+  countries: null
   technologies:
     HISTORICAL:
       2030: 0.7

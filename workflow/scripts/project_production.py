@@ -205,15 +205,13 @@ def _interpolate_curve(
 
 def project_production(
     reference_path: str | Path,
-    config_path: str | Path,
+    reference_year: int,
     scenario_path: str | Path,
     output_path: str | Path,
 ) -> pd.DataFrame:
-    config = load_config(config_path)
     scenario = load_config(scenario_path)
-    historical = config["historical_calibration"]
-    projection_cfg = scenario.get("production_projection", {})
-    reference_year = int(historical["reference_year"])
+    projection_cfg = scenario["production_projection"]
+    reference_year = int(reference_year)
 
     reference = pd.read_parquet(reference_path)
     missing = REQUIRED_REFERENCE_COLUMNS - set(reference.columns)
@@ -234,11 +232,11 @@ def project_production(
         reference["production"], errors="raise"
     ).astype(float)
 
-    generic = _normalise_generic(projection_cfg.get("generic", {}), reference_year)
+    generic = _normalise_generic(projection_cfg["generic"], reference_year)
     commodity_curves = _normalise_commodity_curves(
-        projection_cfg.get("commodities"), reference_year
+        projection_cfg["commodities"], reference_year
     )
-    overrides = load_overrides(projection_cfg.get("file"), reference_year)
+    overrides = load_overrides(projection_cfg["file"], reference_year)
 
     known_commodities = set(reference["commodity"])
     unknown_commodities = sorted(set(commodity_curves) - known_commodities)
@@ -316,9 +314,9 @@ def project_production(
 def main() -> None:
     project_production(
         snakemake.input.reference_production,
-        snakemake.params.config_path,
+        snakemake.params.reference_year,
         snakemake.input.scenario,
-        snakemake.output[0],
+        snakemake.output.production,
     )
 
 

@@ -25,7 +25,7 @@ rule download_all:
 
 rule download_eurostat:
     output:
-        "resources/automatic/eurostat.zip",
+        eurostat="resources/automatic/eurostat.zip",
     log:
         "logs/automatic/download_eurostat.log",
     conda:
@@ -36,12 +36,12 @@ rule download_eurostat:
     message:
         "Download stable Eurostat energy balances."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.eurostat:q} {params.url:q} 2> {log:q}"
 
 
 rule download_jrc_idees:
     output:
-        "resources/automatic/jrc_idees.zip",
+        jrc="resources/automatic/jrc_idees.zip",
     log:
         "logs/automatic/download_jrc_idees.log",
     conda:
@@ -52,12 +52,12 @@ rule download_jrc_idees:
     message:
         "Download the JRC-IDEES dataset."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.jrc:q} {params.url:q} 2> {log:q}"
 
 
 rule download_hotmaps:
     output:
-        "resources/automatic/hotmaps.csv",
+        hotmaps="resources/automatic/hotmaps.csv",
     log:
         "logs/automatic/download_hotmaps.log",
     conda:
@@ -68,12 +68,12 @@ rule download_hotmaps:
     message:
         "Download the Hotmaps energy-intensive industry dataset."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.hotmaps:q} {params.url:q} 2> {log:q}"
 
 
 rule download_ammonia_usgs:
     output:
-        "resources/automatic/ammonia/usgs.xlsx",
+        usgs="resources/automatic/ammonia/usgs.xlsx",
     log:
         "logs/automatic/download_ammonia_usgs.log",
     conda:
@@ -84,12 +84,12 @@ rule download_ammonia_usgs:
     message:
         "Download the U.S. Geological Survey ammonia dataset."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.usgs:q} {params.url:q} 2> {log:q}"
 
 
 rule download_ammonia_plants:
     output:
-        "resources/automatic/ammonia/plants.csv",
+        pypsa="resources/automatic/ammonia/plants.csv",
     log:
         "logs/automatic/download_ammonia_plants.log",
     conda:
@@ -100,12 +100,12 @@ rule download_ammonia_plants:
     message:
         "Download ammonia plants collected by PyPSA-Eur."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.pypsa:q} {params.url:q} 2> {log:q}"
 
 
 rule download_GEM_SPT:
     output:
-        "resources/automatic/GEM_SPT.xlsx",
+        gem="resources/automatic/GEM_SPT.xlsx",
     log:
         "logs/automatic/download_GEM_SPT.log",
     conda:
@@ -116,12 +116,12 @@ rule download_GEM_SPT:
     message:
         "Download the Global Energy Monitor Steel Plant Tracker."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.gem:q} {params.url:q} 2> {log:q}"
 
 
 rule download_cement_non_eu:
     output:
-        "resources/automatic/cement_non_eu.csv",
+        pypsa="resources/automatic/cement_non_eu.csv",
     log:
         "logs/automatic/download_cement_non_eu.log",
     conda:
@@ -132,12 +132,12 @@ rule download_cement_non_eu:
     message:
         "Download non-EU cement plants collected by PyPSA-Eur."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.pypsa:q} {params.url:q} 2> {log:q}"
 
 
 rule download_refineries_non_eu:
     output:
-        "resources/automatic/non_eu/refineries.csv",
+        pypsa="resources/automatic/non_eu/refineries.csv",
     log:
         "logs/automatic/download_refineries_non_eu.log",
     conda:
@@ -148,12 +148,12 @@ rule download_refineries_non_eu:
     message:
         "Download non-EU refineries collected by PyPSA-Eur."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.pypsa:q} {params.url:q} 2> {log:q}"
 
 
 rule download_CHE_industry:
     output:
-        "resources/automatic/CHE_industry.csv",
+        pypsa="resources/automatic/CHE_industry.csv",
     log:
         "logs/automatic/download_CHE_industry.log",
     conda:
@@ -164,14 +164,14 @@ rule download_CHE_industry:
     message:
         "Download Swiss industrial production by subsector."
     shell:
-        "curl {params.curl_args} --output {output:q} {params.url:q} 2> {log:q}"
+        "curl {params.curl_args} --output {output.pypsa:q} {params.url:q} 2> {log:q}"
 
 
 rule unzip_eurostat:
     input:
         "resources/automatic/eurostat.zip",
     output:
-        directory("resources/automatic/eurostat"),
+        extracted=directory("resources/automatic/eurostat"),
     log:
         "logs/automatic/unzip_eurostat.log",
     conda:
@@ -186,7 +186,7 @@ rule unzip_jrc_idees:
     input:
         "resources/automatic/jrc_idees.zip",
     output:
-        directory("resources/automatic/jrc_idees"),
+        extracted=directory("resources/automatic/jrc_idees"),
     log:
         "logs/automatic/unzip_jrc_idees.log",
     conda:
