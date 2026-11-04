@@ -12,8 +12,6 @@ rule prepare_shapes:
         "../envs/module.yaml"
     params:
         supported_countries=internal["calibration_countries"],
-        region_id_column=config["spatial_disaggregation"]["region_id_column"],
-        country_column=config["spatial_disaggregation"]["country_column"],
     script:
         "../scripts/prepare_shapes.py"
 

@@ -428,7 +428,7 @@ def _selector_mask(df: pd.DataFrame, tr: dict) -> pd.Series:
     )
     if tr["use_type"]:
         mask &= _value_selector(df["use_type"], tr["use_type"])
-    if tr["countries"]:
+    if tr.get("countries"):
         mask &= _value_selector(df["country"], tr["countries"])
     return mask
 

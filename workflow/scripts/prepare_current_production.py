@@ -178,7 +178,7 @@ def split_basic_chemicals(
     chlorine_production_today,
     methanol_production_today,
 ) -> pd.DataFrame:
-    """Apply the historical chemical calibration in normalized records."""
+    """Apply the legacy historical chemical calibration in normalized records."""
     mask = (production["sector"] == "CHI") & (
         production["commodity"] == "BASIC_CHEMICALS"
     )
@@ -193,7 +193,8 @@ def split_basic_chemicals(
         ammonia.loc[available, str(year_to_use)], errors="coerce"
     ).fillna(0.0)
 
-    # JRC basic chemicals are reported as kt ethylene-equivalent; USGS ammonia is kt
+    # This intentionally preserves the legacy numerical calibration. JRC basic
+    # chemicals are reported as kt ethylene-equivalent while USGS ammonia is kt
     # NH3; the subtraction/distribution is therefore a calibration convention,
     # not a physical mass balance.
     residual = (basic["production"] - ammonia_series).clip(lower=0.0)

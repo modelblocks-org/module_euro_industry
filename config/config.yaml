@@ -30,9 +30,6 @@ historical_calibration:
   coke_oven_allocation: 0.75
 
 spatial_disaggregation:
-  region_id_column: shape_id
-  country_column: country_id
-
   # Optional subset of years to regionalize. Set to null to keep all years.
   years:
     - 2030
