@@ -72,7 +72,7 @@ technologies_file: config/technologies.yaml
 scenario_file: config/scenarios/retain_max_electrification.yaml
 
 spatial_disaggregation:
-  regions_file: resources/user/working_EU/shapes.parquet
+  regions_file: resources/user/shapes.parquet
   region_id_column: shape_id
   country_column: country_id
 
