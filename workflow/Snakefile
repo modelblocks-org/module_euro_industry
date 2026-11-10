@@ -54,7 +54,7 @@ include: "rules/spatial.smk"
 # explicitly used as a script or input in a snakemake rule.
 # Imported Python helpers must also be available to remotely loaded scripts.
 workflow.source_path("scripts/_industry_schema.py")
-workflow.source_path("scripts/build_spatial_distribution_keys.py")
+workflow.source_path("scripts/_utils.py")
 
 
 rule all:

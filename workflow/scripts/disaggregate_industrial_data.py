@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from build_spatial_distribution_keys import spatial_category
+from _utils import spatial_category
 
 
 def attach_category(df: pd.DataFrame) -> pd.DataFrame:
