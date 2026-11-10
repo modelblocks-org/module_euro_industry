@@ -32,8 +32,8 @@ properties:
           minLength: 1
   historical_calibration:
     description: Historical production and chemical energy-demand calibration assumptions. The model uses JRC_IDEES data, however,
-      some sectors are not covered by JRC_IDEES and require user-supplied production and energy-demand assumptions. 
-      The model uses these assumptions to calibrate the historical energy demand of the industrial sector. 
+      some sectors are not covered by JRC_IDEES and require user-supplied production and energy-demand assumptions.
+      The model uses these assumptions to calibrate the historical energy demand of the industrial sector.
     type: object
     additionalProperties: false
     required:
