@@ -428,7 +428,7 @@ def _selector_mask(df: pd.DataFrame, tr: dict) -> pd.Series:
     )
     if tr["use_type"]:
         mask &= _value_selector(df["use_type"], tr["use_type"])
-    if tr["countries"]:
+    if tr.get("countries"):
         mask &= _value_selector(df["country"], tr["countries"])
     return mask
 
@@ -726,16 +726,14 @@ def transform_demand(
     historical_production_path: str | Path,
     historical_energy_path: str | Path,
     reference_year: int,
-    technologies_path: str | Path,
+    processes: dict,
+    route_definitions: dict,
     scenario_path: str | Path,
     output_demand_path: str | Path,
     output_route_production_path: str | Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     reference_year = int(reference_year)
-    technologies = load_yaml(technologies_path)
     scenario = load_yaml(scenario_path)
-    processes = technologies["processes"]
-    route_definitions = technologies["production_routes"]
     transformations = scenario["process_transformations"]
     route_shares = scenario["route_shares"]
 
@@ -821,8 +819,9 @@ def main() -> None:
         snakemake.input.historical_production,
         snakemake.input.historical_energy,
         snakemake.params.reference_year,
-        snakemake.input.technologies,
-        snakemake.input.scenario,
+        snakemake.params.processes,
+        snakemake.params.production_routes,
+        snakemake.input.projection_input,
         snakemake.output.demand,
         snakemake.output.route_production,
     )

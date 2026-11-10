@@ -6,28 +6,29 @@ CURL_ARGS = "--fail --silent --show-error --location --retry 5 --retry-delay 5 -
 rule download_all:
     """Download and extract all external datasets used by the original workflow."""
     input:
-        "resources/automatic/eurostat.zip",
-        "resources/automatic/jrc_idees.zip",
-        "resources/automatic/hotmaps.csv",
-        "resources/automatic/ammonia/usgs.xlsx",
-        "resources/automatic/ammonia/plants.csv",
-        "resources/automatic/GEM_SPT.xlsx",
-        # "resources/automatic/cement_non_eu.csv", File cannot be found
-        "resources/automatic/non_eu/refineries.csv",
-        "resources/automatic/CHE_industry.csv",
-        "resources/automatic/eurostat",
-        "resources/automatic/jrc_idees",
+        "<resources>/automatic/eurostat.zip",
+        "<resources>/automatic/jrc_idees.zip",
+        "<resources>/automatic/hotmaps.csv",
+        "<resources>/automatic/ammonia/usgs.xlsx",
+        "<resources>/automatic/ammonia/plants.csv",
+        "<resources>/automatic/GEM_SPT.xlsx",
+        # FIXME:  file cannot be found
+        # "<resources>/automatic/cement_non_eu.csv",
+        "<resources>/automatic/non_eu/refineries.csv",
+        "<resources>/automatic/CHE_industry.csv",
+        "<resources>/automatic/eurostat",
+        "<resources>/automatic/jrc_idees",
     output:
-        touch("resources/automatic/.downloads_complete"),
+        touch("<resources>/automatic/.downloads_complete"),
     conda:
         "../envs/module.yaml"
 
 
 rule download_eurostat:
     output:
-        eurostat="resources/automatic/eurostat.zip",
+        eurostat="<resources>/automatic/eurostat.zip",
     log:
-        "logs/automatic/download_eurostat.log",
+        "<logs>/automatic/download_eurostat.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -41,9 +42,9 @@ rule download_eurostat:
 
 rule download_jrc_idees:
     output:
-        jrc="resources/automatic/jrc_idees.zip",
+        jrc="<resources>/automatic/jrc_idees.zip",
     log:
-        "logs/automatic/download_jrc_idees.log",
+        "<logs>/automatic/download_jrc_idees.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -57,9 +58,9 @@ rule download_jrc_idees:
 
 rule download_hotmaps:
     output:
-        hotmaps="resources/automatic/hotmaps.csv",
+        hotmaps="<resources>/automatic/hotmaps.csv",
     log:
-        "logs/automatic/download_hotmaps.log",
+        "<logs>/automatic/download_hotmaps.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -73,9 +74,9 @@ rule download_hotmaps:
 
 rule download_ammonia_usgs:
     output:
-        usgs="resources/automatic/ammonia/usgs.xlsx",
+        usgs="<resources>/automatic/ammonia/usgs.xlsx",
     log:
-        "logs/automatic/download_ammonia_usgs.log",
+        "<logs>/automatic/download_ammonia_usgs.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -89,9 +90,9 @@ rule download_ammonia_usgs:
 
 rule download_ammonia_plants:
     output:
-        pypsa="resources/automatic/ammonia/plants.csv",
+        pypsa="<resources>/automatic/ammonia/plants.csv",
     log:
-        "logs/automatic/download_ammonia_plants.log",
+        "<logs>/automatic/download_ammonia_plants.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -105,9 +106,9 @@ rule download_ammonia_plants:
 
 rule download_GEM_SPT:
     output:
-        gem="resources/automatic/GEM_SPT.xlsx",
+        gem="<resources>/automatic/GEM_SPT.xlsx",
     log:
-        "logs/automatic/download_GEM_SPT.log",
+        "<logs>/automatic/download_GEM_SPT.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -121,9 +122,9 @@ rule download_GEM_SPT:
 
 rule download_cement_non_eu:
     output:
-        pypsa="resources/automatic/cement_non_eu.csv",
+        pypsa="<resources>/automatic/cement_non_eu.csv",
     log:
-        "logs/automatic/download_cement_non_eu.log",
+        "<logs>/automatic/download_cement_non_eu.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -137,9 +138,9 @@ rule download_cement_non_eu:
 
 rule download_refineries_non_eu:
     output:
-        pypsa="resources/automatic/non_eu/refineries.csv",
+        pypsa="<resources>/automatic/non_eu/refineries.csv",
     log:
-        "logs/automatic/download_refineries_non_eu.log",
+        "<logs>/automatic/download_refineries_non_eu.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -153,9 +154,9 @@ rule download_refineries_non_eu:
 
 rule download_CHE_industry:
     output:
-        pypsa="resources/automatic/CHE_industry.csv",
+        pypsa="<resources>/automatic/CHE_industry.csv",
     log:
-        "logs/automatic/download_CHE_industry.log",
+        "<logs>/automatic/download_CHE_industry.log",
     conda:
         "../envs/module.yaml"
     params:
@@ -169,11 +170,11 @@ rule download_CHE_industry:
 
 rule unzip_eurostat:
     input:
-        "resources/automatic/eurostat.zip",
+        "<resources>/automatic/eurostat.zip",
     output:
-        extracted=directory("resources/automatic/eurostat"),
+        extracted=directory("<resources>/automatic/eurostat"),
     log:
-        "logs/automatic/unzip_eurostat.log",
+        "<logs>/automatic/unzip_eurostat.log",
     conda:
         "../envs/module.yaml"
     message:
@@ -184,11 +185,11 @@ rule unzip_eurostat:
 
 rule unzip_jrc_idees:
     input:
-        "resources/automatic/jrc_idees.zip",
+        "<resources>/automatic/jrc_idees.zip",
     output:
-        extracted=directory("resources/automatic/jrc_idees"),
+        extracted=directory("<resources>/automatic/jrc_idees"),
     log:
-        "logs/automatic/unzip_jrc_idees.log",
+        "<logs>/automatic/unzip_jrc_idees.log",
     conda:
         "../envs/module.yaml"
     message:

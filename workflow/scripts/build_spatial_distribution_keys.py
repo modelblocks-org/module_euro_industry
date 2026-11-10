@@ -1,70 +1,11 @@
 import sys
 from pathlib import Path
 
-import country_converter as coco
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-HOTMAPS_CATEGORY_BY_SECTOR = {
-    "ISI": "Iron and steel",
-    "CHI": "Chemical industry",
-    "PPA": "Paper and printing",
-    "NFM": "Non-ferrous metals",
-    "FBT": "Other non-classified",
-    "TRE": "Other non-classified",
-    "MAE": "Other non-classified",
-    "TEL": "Other non-classified",
-    "WWP": "Other non-classified",
-    "OIS": "Other non-classified",
-}
-
 SUPPORTED_FALLBACKS = {"generic_industry", "population", "user_key", "uniform"}
-
-
-def spatial_category(sector: str, commodity: str) -> str:
-    """Map model sector/commodity to the Hotmaps industrial subsector taxonomy."""
-    if sector == "NMM":
-        if commodity in {"CEM", "CEMENT"}:
-            return "Cement"
-        if commodity == "GLASS":
-            return "Glass"
-        return "Non-metallic mineral products"
-    return HOTMAPS_CATEGORY_BY_SECTOR.get(sector, "Other non-classified")
-
-
-def read_regions(
-    path: str, region_id_column: str, country_column: str | None
-) -> gpd.GeoDataFrame:
-    regions = gpd.read_parquet(path)
-    if region_id_column not in regions.columns:
-        raise ValueError(f"Region id column '{region_id_column}' not found in {path}.")
-
-    regions = regions.rename(columns={region_id_column: "region"}).copy()
-    regions["region"] = regions["region"].astype(str)
-
-    if country_column:
-        if country_column not in regions.columns:
-            raise ValueError(f"Country column '{country_column}' not found in {path}.")
-        countries = regions[country_column].astype(str).str.upper()
-        unique_countries = countries.unique().tolist()
-        converter = coco.CountryConverter()
-        country_codes = {
-            country: converter.convert(country, to="ISO2")
-            for country in unique_countries
-        }
-        regions["country"] = countries.map(country_codes)
-    else:
-        regions["country"] = regions["region"].str[:2].str.upper()
-
-    if regions["region"].duplicated().any():
-        dup = regions.loc[regions["region"].duplicated(), "region"].tolist()
-        raise ValueError(f"Duplicate region identifiers in GeoParquet: {dup[:10]}")
-
-    if regions.crs is None:
-        raise ValueError("The user GeoParquet has no CRS. Please provide a valid CRS.")
-
-    return regions[["region", "country", "geometry"]].to_crs("EPSG:4326")
 
 
 def read_hotmaps(path: str) -> gpd.GeoDataFrame:
@@ -295,15 +236,13 @@ def build_keys(
 
 
 def main() -> None:
-    region_id_column = snakemake.params.region_id_column
-    country_column = snakemake.params.country_column
     fallback_options = snakemake.params.fallback_options
     if not isinstance(fallback_options, list) or not fallback_options:
         raise ValueError(
             "spatial_disaggregation.fallback_options must be a non-empty list."
         )
 
-    regions = read_regions(snakemake.input.regions, region_id_column, country_column)
+    regions = gpd.read_parquet(snakemake.input.regions)
     hotmaps = read_hotmaps(snakemake.input.hotmaps)
     hotmaps = assign_sites_to_regions(hotmaps, regions)
 

@@ -234,7 +234,7 @@ def project_production(
 
     generic = _normalise_generic(projection_cfg["generic"], reference_year)
     commodity_curves = _normalise_commodity_curves(
-        projection_cfg["commodities"], reference_year
+        projection_cfg.get("commodities"), reference_year
     )
     overrides = load_overrides(projection_cfg["file"], reference_year)
 
@@ -315,7 +315,7 @@ def main() -> None:
     project_production(
         snakemake.input.reference_production,
         snakemake.params.reference_year,
-        snakemake.input.scenario,
+        snakemake.input.projection_input,
         snakemake.output.production,
     )
 
