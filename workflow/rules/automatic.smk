@@ -12,7 +12,8 @@ rule download_all:
         "<resources>/automatic/ammonia/usgs.xlsx",
         "<resources>/automatic/ammonia/plants.csv",
         "<resources>/automatic/GEM_SPT.xlsx",
-        # "<resources>/automatic/cement_non_eu.csv", File cannot be found
+        # FIXME:  file cannot be found
+        # "<resources>/automatic/cement_non_eu.csv",
         "<resources>/automatic/non_eu/refineries.csv",
         "<resources>/automatic/CHE_industry.csv",
         "<resources>/automatic/eurostat",
