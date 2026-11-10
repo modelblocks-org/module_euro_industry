@@ -14,6 +14,7 @@ rule prepare_shapes:
         "../envs/module.yaml"
     params:
         supported_countries=internal["calibration_countries"],
+        reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/prepare_shapes.py"
 

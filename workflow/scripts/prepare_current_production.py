@@ -73,9 +73,10 @@ def get_energy_ratio(
 ) -> pd.Series:
     """National/EU27 sector energy ratio used by the legacy non-EU proxy."""
     if country == "CH":
-        energy = pd.read_csv(ch_path, index_col=0).dropna()
+        energy = pd.read_csv(ch_path, index_col=0)
+        energy = energy.dropna()
         energy = energy.rename(index=CH_MAPPING).groupby(level=0).sum()
-        energy = energy[str(min(2019, year))] * TJ_TO_KTOE
+        energy = energy[str(year)] * TJ_TO_KTOE
     else:
         eurostat_country = country.replace("GB", "UK")
         filename = (
@@ -83,7 +84,7 @@ def get_energy_ratio(
             / f"{eurostat_country}-Energy-balance-sheets-April-2023-edition.xlsb"
         )
         df = pd.read_excel(
-            filename, sheet_name=str(min(2019, year)), index_col=2, header=0, skiprows=4
+            filename, sheet_name=str(year), index_col=2, header=0, skiprows=4
         )
         energy = df.loc[list(EB_SECTORS), "Total"].rename(index=EB_SECTORS)
 
@@ -179,6 +180,9 @@ def split_basic_chemicals(
     methanol_production_today,
 ) -> pd.DataFrame:
     """Apply the legacy historical chemical calibration in normalized records."""
+    # JRC-IDEES does not separate the chemicals needed by this model. Use USGS
+    # data for ammonia, then allocate HVC, chlorine and methanol across countries
+    # using their remaining basic-chemicals production after subtracting ammonia.
     mask = (production["sector"] == "CHI") & (
         production["commodity"] == "BASIC_CHEMICALS"
     )

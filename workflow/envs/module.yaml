@@ -19,3 +19,4 @@ dependencies:
 - shapely >=2.1.2
 - pydeck >=0.9.3
 - pydantic >=2.14.1
+- pandera >=0.34.1

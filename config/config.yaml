@@ -2,25 +2,20 @@ scenarios:
   retain_max_electrification:
     projection_input:
       retain_max_electrification.yaml
+    technology_input: technologies.yaml
   industrial_relocation:
     projection_input:
       industrial_relocation.yaml
+    technology_input: technologies.yaml
 
 historical_calibration:
   reference_year: 2019
 
-  # JRC-IDEES does not provide the chemical subsector disaggregation required
-  # by the model. Ammonia is taken from USGS. HVC, chlorine and methanol are
-  # allocated across countries using each country's residual non-ammonia
-  # basic-chemicals production, preserving the calibration of the old model.
-  # Note: this is a calibration convention, not a physical mass balance,
-  # because JRC reports basic chemicals in ethylene-equivalent output.
-  basic_chemicals_without_NH3_production_today: 69.0  # Mt/a
-  HVC_production_today: 52.0                           # Mt/a
-  chlorine_production_today: 9.58                     # Mt/a
-  methanol_production_today: 1.5                      # Mt/a
+  basic_chemicals_without_NH3_production_today: 69.0
+  HVC_production_today: 52.0
+  chlorine_production_today: 9.58
+  methanol_production_today: 1.5
 
-  # Historical chemical energy-demand reconstruction.
   MWh_NH3_per_tNH3: 5.166
   MWh_H2_per_tNH3_electrolysis: 5.93
   MWh_elec_per_tNH3_electrolysis: 0.2473
@@ -29,44 +24,29 @@ historical_calibration:
   MWh_elec_per_tMeOH: 0.167
   MWh_CH4_per_tMeOH: 10.25
 
-  # Keep the legacy convention in which ammonia demand is represented as an
-  # ammonia carrier. Set false only if the historical baseline should instead
-  # expose the reconstructed hydrogen/electricity inputs.
   ammonia: true
 
-  # Share of coke-oven transformation output attributed to integrated
-  # steelworks (BF-BOF) in the historical calibration.
   coke_oven_allocation: 0.75
 
 spatial_disaggregation:
-  # Optional subset of years to regionalize. Set to null to keep all years.
   years:
     - 2030
     - 2040
     - 2050
 
-  # The primary key is always sector-specific Hotmaps data when available.
-  # If it is unavailable, the options below are tried in this order.
   fallback_options:
     - generic_industry
     - population
     - user_key
     - uniform
 
-  # Generic industrial fallback based on all Hotmaps industrial sites in the
-  # same country. No additional configuration is required.
-
-  # Optional population-based regional key. The weights do not need to sum to
-  # one; they are renormalized to the regions present in the GeoParquet.
   population:
-    enabled: false  # Supply the population CSV through the population pathvar.
+    enabled: false
     region_column: name
     country_column: ct
     weight_column: fraction
     source_name: population
 
-  # Optional regional key, supplied through the user_key pathvar.
-  # It follows the same three-column concept as population.
   user_key:
     enabled: false
     region_column: region
@@ -74,69 +54,8 @@ spatial_disaggregation:
     weight_column: share
     source_name: user_key
 
-technologies:
-  # Reusable industrial technology definitions.
-  #
-  # This section defines WHAT technologies and new production routes are.
-  # Deployment assumptions (where, when, and how much) belong in the projection input file. (see examples)
-  #
-  # Existing-process replacement technologies use efficiency + carrier shares.
-  # New-route processes use specific energy intensities in MWh/t product.
-
-  processes:
-    industrial_heat_pump:
-      efficiency: 3.0
-      carriers:
-        ELEC:
-          share: 1.0
-    electric_boiler:
-      efficiency: 0.98
-      carriers:
-        ELEC:
-          share: 1.0
-    electric_process_heat:
-      efficiency: 0.95
-      carriers:
-        ELEC:
-          share: 1.0
-    electric_dryer:
-      efficiency: 0.95
-      carriers:
-        ELEC:
-          share: 1.0
-    electric_furnace:
-      efficiency: 0.95
-      carriers:
-        ELEC:
-          share: 1.0
-    hydrogen_dri:
-      intensities:
-        HYDROGEN: 1.8
-        ELEC: 0.1
-    new_eaf:
-      intensities:
-        ELEC: 0.65
-    electric_hvc_conversion:
-      intensities:
-        ELEC: 2.0
-  production_routes:
-    H2_DRI_EAF:
-      commodity: STEEL
-      inherit_use_types_from: null
-      processes:
-      - hydrogen_dri
-      - new_eaf
-    ELECTRIC_HVC:
-      commodity: HVC
-      inherit_use_types_from:
-        production_route: BASE_ROUTE
-        use_types:
-        - feedstock
-      processes:
-      - electric_hvc_conversion
-
 visualization:
-  energy_layer: FEC  # FEC or UED, shared by energy charts and maps.
+  energy_layer: FEC
   include_plots:
     - production_overview
     - production_route

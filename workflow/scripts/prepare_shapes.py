@@ -5,19 +5,14 @@ from pathlib import Path
 
 import country_converter as coco
 import geopandas as gpd
+from _schemas import ShapesSchema
 
 
-def read_regions(path: str) -> gpd.GeoDataFrame:
+def read_regions(path: str, reference_year: int) -> gpd.GeoDataFrame:
     """Validate and normalize user regions once for all downstream steps."""
     regions = gpd.read_parquet(path)
-    if "shape_class" in regions.columns:
-        regions = regions.loc[regions["shape_class"].eq("land")].copy()
-    if regions.empty:
-        raise ValueError("The supplied shapes contain no land regions.")
-    if "shape_id" not in regions.columns:
-        raise ValueError(f"Region id column 'shape_id' not found in {path}.")
-    if "country_id" not in regions.columns:
-        raise ValueError(f"Country column 'country_id' not found in {path}.")
+    regions = ShapesSchema.validate_for_year(regions, reference_year)
+    regions = regions.loc[regions["shape_class"].eq("land")].copy()
 
     regions = regions.rename(columns={"shape_id": "region"}).copy()
     regions["region"] = regions["region"].astype(str)
@@ -30,28 +25,18 @@ def read_regions(path: str) -> gpd.GeoDataFrame:
     }
     regions["country"] = countries.map(country_codes)
 
-    if regions["region"].duplicated().any():
-        dup = regions.loc[regions["region"].duplicated(), "region"].tolist()
-        raise ValueError(f"Duplicate region identifiers in GeoParquet: {dup[:10]}")
-
-    if regions.crs is None:
-        raise ValueError("The user GeoParquet has no CRS. Please provide a valid CRS.")
-
     return regions[["region", "country", "geometry"]].to_crs("EPSG:4326")
 
 
 def country_scope(country_ids, supported_countries, eu_countries):
     """Add the fixed EU reference only when non-EU inference is needed."""
     country_ids = sorted(set(country_ids))
-    if not country_ids:
-        raise ValueError("The supplied shapes contain no land countries.")
     unsupported = set(country_ids) - set(supported_countries)
     if unsupported:
         raise ValueError(
             "No supported industrial calibration source for countries: "
             f"{', '.join(sorted(unsupported))}. "
-            "Supply shapes restricted to supported countries, or add a verified "
-            "industrial data source before including these countries."
+            "Supply shapes restricted to supported countries."
         )
     reference = sorted(set(supported_countries) & set(eu_countries))
     source_country_ids = set(country_ids)
@@ -62,7 +47,7 @@ def country_scope(country_ids, supported_countries, eu_countries):
 
 def main():
     """Prepare land shapes and target/reference country lists."""
-    shapes = read_regions(snakemake.input.shapes)
+    shapes = read_regions(snakemake.input.shapes, snakemake.params.reference_year)
     country_ids, source_country_ids = country_scope(
         shapes["country"].unique(),
         snakemake.params.supported_countries,

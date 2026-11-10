@@ -1,8 +1,221 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-description: "Schema for user-provided configuration files."
+$schema: https://json-schema.org/draft/2020-12/schema
+description: Schema for user-provided European industrial energy-demand configuration.
 type: object
 additionalProperties: false
+required:
+- scenarios
+- historical_calibration
+- spatial_disaggregation
+- visualization
 properties:
-  dummy_text:
-    description: A template example. Should be deleted in real applications.
-    type: string
+  scenarios:
+    description: Named scenarios combining projection assumptions and technology definitions.
+    type: object
+    propertyNames:
+      minLength: 1
+    minProperties: 1
+    additionalProperties:
+      description: Input files defining one scenario.
+      type: object
+      additionalProperties: false
+      required:
+      - projection_input
+      - technology_input
+      properties:
+        projection_input:
+          description: Projection YAML filename or relative path below the projection_inputs pathvar.
+          type: string
+          minLength: 1
+        technology_input:
+          description: Technology YAML filename or relative path below the technology_inputs pathvar.
+          type: string
+          minLength: 1
+  historical_calibration:
+    description: Historical production and chemical energy-demand calibration assumptions. The model uses JRC_IDEES data, however,
+      some sectors are not covered by JRC_IDEES and require user-supplied production and energy-demand assumptions. 
+      The model uses these assumptions to calibrate the historical energy demand of the industrial sector. 
+    type: object
+    additionalProperties: false
+    required:
+    - reference_year
+    - basic_chemicals_without_NH3_production_today
+    - HVC_production_today
+    - chlorine_production_today
+    - methanol_production_today
+    - MWh_NH3_per_tNH3
+    - MWh_H2_per_tNH3_electrolysis
+    - MWh_elec_per_tNH3_electrolysis
+    - MWh_elec_per_tCl
+    - MWh_H2_per_tCl
+    - MWh_elec_per_tMeOH
+    - MWh_CH4_per_tMeOH
+    - ammonia
+    - coke_oven_allocation
+    properties:
+      reference_year:
+        description: Historical year, from 2000 to 2021. Switzerland requires 2014 or later.
+        type: integer
+        minimum: 2000
+        maximum: 2021
+      basic_chemicals_without_NH3_production_today:
+        description: European non-ammonia basic-chemicals production in Mt/a, used to allocate chemical
+          subsectors.
+        type: number
+        exclusiveMinimum: 0
+      HVC_production_today:
+        description: European high-value chemicals production in Mt/a.
+        type: number
+        minimum: 0
+      chlorine_production_today:
+        description: European chlorine production in Mt/a.
+        type: number
+        minimum: 0
+      methanol_production_today:
+        description: European methanol production in Mt/a.
+        type: number
+        minimum: 0
+      MWh_NH3_per_tNH3:
+        description: Ammonia carrier energy content in MWh per tonne of ammonia.
+        type: number
+        exclusiveMinimum: 0
+      MWh_H2_per_tNH3_electrolysis:
+        description: Hydrogen demand in MWh per tonne of ammonia for the reconstructed electrolysis route.
+        type: number
+        minimum: 0
+      MWh_elec_per_tNH3_electrolysis:
+        description: Electricity demand in MWh per tonne of ammonia for the reconstructed electrolysis
+          route.
+        type: number
+        minimum: 0
+      MWh_elec_per_tCl:
+        description: Electricity demand in MWh per tonne of chlorine.
+        type: number
+        minimum: 0
+      MWh_H2_per_tCl:
+        description: Net hydrogen demand in MWh per tonne of chlorine; negative values represent coproduct
+          hydrogen credits.
+        type: number
+      MWh_elec_per_tMeOH:
+        description: Electricity demand in MWh per tonne of methanol.
+        type: number
+        minimum: 0
+      MWh_CH4_per_tMeOH:
+        description: Methane demand in MWh per tonne of methanol.
+        type: number
+        minimum: 0
+      ammonia:
+        description: Represent ammonia demand with an ammonia carrier when true. Otherwise expose reconstructed
+          hydrogen and electricity inputs.
+        type: boolean
+      coke_oven_allocation:
+        description: Fraction of coke-oven transformation output attributed to integrated BF-BOF steelworks.
+        type: number
+        minimum: 0
+        maximum: 1
+  spatial_disaggregation:
+    description: Regional allocation of national industry production and energy demand.
+    type: object
+    additionalProperties: false
+    required:
+    - years
+    - fallback_options
+    - population
+    - user_key
+    properties:
+      years:
+        description: Years to regionalize. null retains all available years.
+        type:
+        - array
+        - 'null'
+        items:
+          description: Year to regionalize.
+          type: integer
+        minItems: 1
+        uniqueItems: true
+      fallback_options:
+        description: Alternative ways to distribute industry across regions, tried in order when Hotmaps
+          data for the specific industry is unavailable.
+        type: array
+        items:
+          description: Fallback allocation method.
+          type: string
+          oneOf:
+          - const: generic_industry
+            description: Use all Hotmaps industrial sites in the same country.
+          - const: population
+            description: Use regional population weights from the supplied CSV, when enabled.
+          - const: user_key
+            description: Use your own regional weights from the supplied CSV, when enabled.
+          - const: uniform
+            description: Give every region in the country an equal share.
+        uniqueItems: true
+        minItems: 1
+      population:
+        description: Optional population weights supplied through the population pathvar.
+        $ref: '#/$defs/regional_key'
+      user_key:
+        description: Optional custom regional weights supplied through the user_key pathvar.
+        $ref: '#/$defs/regional_key'
+  visualization:
+    description: Selection of energy layers, charts, and spatial maps.
+    type: object
+    additionalProperties: false
+    required:
+    - energy_layer
+    - include_plots
+    properties:
+      energy_layer:
+        description: 'Energy layer shown in energy charts and maps: final energy consumption (FEC) or
+          useful energy demand (UED).'
+        type: string
+        enum:
+        - FEC
+        - UED
+      include_plots:
+        description: Charts and maps to generate. An empty list disables all visualizations.
+        type: array
+        items:
+          description: Chart or map identifier.
+          type: string
+          enum:
+          - production_overview
+          - production_route
+          - energy_by_sector_map
+          - energy_by_carrier_map
+          - energy_by_carrier
+          - energy_by_commodity
+          - production_map
+          - energy_by_commodity_map
+        uniqueItems: true
+$defs:
+  regional_key:
+    description: Column mapping for a regional-weight CSV; weights are renormalized over regions present
+      in the shapes.
+    type: object
+    additionalProperties: false
+    required:
+    - enabled
+    - region_column
+    - country_column
+    - weight_column
+    - source_name
+    properties:
+      enabled:
+        description: Whether to load and use the CSV supplied through the corresponding pathvar.
+        type: boolean
+      region_column:
+        description: CSV column containing region identifiers matching the shapes.
+        type: string
+        minLength: 1
+      country_column:
+        description: CSV column containing country identifiers.
+        type: string
+        minLength: 1
+      weight_column:
+        description: CSV column containing nonnegative regional weights; weights need not sum to one.
+        type: string
+        minLength: 1
+      source_name:
+        description: Source label recorded for this allocation key in the output.
+        type: string
+        minLength: 1

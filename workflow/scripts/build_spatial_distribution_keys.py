@@ -5,8 +5,6 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-SUPPORTED_FALLBACKS = {"generic_industry", "population", "user_key", "uniform"}
-
 
 def read_hotmaps(path: str) -> gpd.GeoDataFrame:
     df = pd.read_csv(path, sep=";", index_col=0, low_memory=False)
@@ -82,18 +80,10 @@ def read_generic_key(
     """
     df = pd.read_csv(path, low_memory=False)
 
-    missing = [
-        c for c in (region_column, country_column, weight_column) if c not in df.columns
-    ]
-    if missing:
-        raise ValueError(
-            f"Generic spatial key file {path} is missing configured columns: {missing}"
-        )
-
     out = df[[region_column, country_column, weight_column]].copy()
     out.columns = ["region", "country", "weight"]
-    out["region"] = out["region"].astype(str)
-    out["country"] = out["country"].astype(str).str.upper()
+    out["region"] = out["region"].astype("string")
+    out["country"] = out["country"].astype("string").str.upper()
     out["weight"] = pd.to_numeric(out["weight"], errors="coerce")
     out["source_name"] = source_name
     return out
@@ -163,12 +153,6 @@ def choose_fallback(
                 0,
             )
 
-        else:
-            raise ValueError(
-                f"Unknown spatial fallback option '{option}'. "
-                f"Supported values are: {sorted(SUPPORTED_FALLBACKS)}"
-            )
-
     raise ValueError(
         f"No spatial fallback could be constructed for country {country}. "
         "Add 'uniform' as the final fallback if an unconditional fallback is desired."
@@ -184,13 +168,6 @@ def build_keys(
     user_key: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     records: list[dict] = []
-
-    unknown = set(fallback_options) - SUPPORTED_FALLBACKS
-    if unknown:
-        raise ValueError(
-            f"Unsupported fallback options: {sorted(unknown)}. "
-            f"Supported values are: {sorted(SUPPORTED_FALLBACKS)}"
-        )
 
     for country in sorted(regions["country"].unique()):
         country_regions = regions.loc[regions["country"] == country, "region"]
@@ -237,11 +214,6 @@ def build_keys(
 
 def main() -> None:
     fallback_options = snakemake.params.fallback_options
-    if not isinstance(fallback_options, list) or not fallback_options:
-        raise ValueError(
-            "spatial_disaggregation.fallback_options must be a non-empty list."
-        )
-
     regions = gpd.read_parquet(snakemake.input.regions)
     hotmaps = read_hotmaps(snakemake.input.hotmaps)
     hotmaps = assign_sites_to_regions(hotmaps, regions)
