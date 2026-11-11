@@ -38,71 +38,101 @@ properties:
     additionalProperties: false
     required:
     - reference_year
-    - basic_chemicals_without_NH3_production_today
-    - HVC_production_today
-    - chlorine_production_today
-    - methanol_production_today
-    - MWh_NH3_per_tNH3
-    - MWh_H2_per_tNH3_electrolysis
-    - MWh_elec_per_tNH3_electrolysis
-    - MWh_elec_per_tCl
-    - MWh_H2_per_tCl
-    - MWh_elec_per_tMeOH
-    - MWh_CH4_per_tMeOH
+    - production_Mt_per_year
+    - energy_density_MWh_per_t
+    - energy_feedstock_MWh_per_t
     - ammonia
     - coke_oven_allocation
+    if:
+      properties:
+        ammonia:
+          const: true
+      required:
+      - ammonia
+    then:
+      properties:
+        energy_density_MWh_per_t:
+          required:
+          - NH3
     properties:
       reference_year:
         description: Historical year, from 2000 to 2021. Switzerland requires 2014 or later.
         type: integer
         minimum: 2000
         maximum: 2021
-      basic_chemicals_without_NH3_production_today:
-        description: European non-ammonia basic-chemicals production in Mt/a, used to allocate chemical
-          subsectors.
-        type: number
-        exclusiveMinimum: 0
-      HVC_production_today:
-        description: European high-value chemicals production in Mt/a.
-        type: number
-        minimum: 0
-      chlorine_production_today:
-        description: European chlorine production in Mt/a.
-        type: number
-        minimum: 0
-      methanol_production_today:
-        description: European methanol production in Mt/a.
-        type: number
-        minimum: 0
-      MWh_NH3_per_tNH3:
-        description: Ammonia carrier energy content in MWh per tonne of ammonia.
-        type: number
-        exclusiveMinimum: 0
-      MWh_H2_per_tNH3_electrolysis:
-        description: Hydrogen demand in MWh per tonne of ammonia for the reconstructed electrolysis route.
-        type: number
-        minimum: 0
-      MWh_elec_per_tNH3_electrolysis:
-        description: Electricity demand in MWh per tonne of ammonia for the reconstructed electrolysis
-          route.
-        type: number
-        minimum: 0
-      MWh_elec_per_tCl:
-        description: Electricity demand in MWh per tonne of chlorine.
-        type: number
-        minimum: 0
-      MWh_H2_per_tCl:
-        description: Net hydrogen demand in MWh per tonne of chlorine; negative values represent coproduct
-          hydrogen credits.
-        type: number
-      MWh_elec_per_tMeOH:
-        description: Electricity demand in MWh per tonne of methanol.
-        type: number
-        minimum: 0
-      MWh_CH4_per_tMeOH:
-        description: Methane demand in MWh per tonne of methanol.
-        type: number
-        minimum: 0
+      production_Mt_per_year:
+        description: European annual production used to calibrate chemical subsectors.
+        type: object
+        additionalProperties: false
+        required:
+        - basic_chemicals_without_NH3
+        - HVC
+        - chlorine
+        - methanol
+        properties:
+          basic_chemicals_without_NH3:
+            description: European non-ammonia basic-chemicals production in Mt/a, used to allocate chemical
+              subsectors.
+            type: number
+            exclusiveMinimum: 0
+          HVC:
+            description: European high-value chemicals production in Mt/a.
+            type: number
+            minimum: 0
+          chlorine:
+            description: European chlorine production in Mt/a.
+            type: number
+            minimum: 0
+          methanol:
+            description: European methanol production in Mt/a.
+            type: number
+            minimum: 0
+      energy_density_MWh_per_t:
+        description: Carrier energy content in MWh per tonne of the named carrier. NH3 is required only when ammonia is true.
+        type: object
+        additionalProperties: false
+        properties:
+          NH3:
+            description: Ammonia carrier energy content in MWh per tonne of ammonia.
+            type: number
+            exclusiveMinimum: 0
+      energy_feedstock_MWh_per_t:
+        description: Energy and feedstock inputs in MWh per tonne of product.
+        type: object
+        additionalProperties: false
+        required:
+        - H2_per_NH3_electrolysis
+        - elec_per_NH3_electrolysis
+        - elec_per_Cl
+        - H2_per_Cl
+        - elec_per_MeOH
+        - CH4_per_MeOH
+        properties:
+          H2_per_NH3_electrolysis:
+            description: Hydrogen demand in MWh per tonne of ammonia for the reconstructed electrolysis route.
+            type: number
+            minimum: 0
+          elec_per_NH3_electrolysis:
+            description: Electricity demand in MWh per tonne of ammonia for the reconstructed electrolysis
+              route.
+            type: number
+            minimum: 0
+          elec_per_Cl:
+            description: Electricity demand in MWh per tonne of chlorine.
+            type: number
+            minimum: 0
+          H2_per_Cl:
+            description: Net hydrogen demand in MWh per tonne of chlorine; negative values represent coproduct
+              hydrogen credits.
+            type: number
+          elec_per_MeOH:
+            description: Electricity demand in MWh per tonne of methanol.
+            type: number
+            minimum: 0
+          CH4_per_MeOH:
+            description: Methane demand in MWh per tonne of methanol.
+            type: number
+            minimum: 0
       ammonia:
         description: Represent ammonia demand with an ammonia carrier when true. Otherwise expose reconstructed
           hydrogen and electricity inputs.

@@ -174,10 +174,10 @@ def split_basic_chemicals(
     production: pd.DataFrame,
     ammonia_path: Path,
     year: int,
-    basic_chemicals_without_NH3_production_today,
-    HVC_production_today,
-    chlorine_production_today,
-    methanol_production_today,
+    basic_chemicals_without_ammonia_Mt_per_year,
+    hvc_Mt_per_year,
+    chlorine_Mt_per_year,
+    methanol_Mt_per_year,
 ) -> pd.DataFrame:
     """Apply the legacy historical chemical calibration in normalized records."""
     # JRC-IDEES does not separate the chemicals needed by this model. Use USGS
@@ -202,13 +202,13 @@ def split_basic_chemicals(
     # NH3; the subtraction/distribution is therefore a calibration convention,
     # not a physical mass balance.
     residual = (basic["production"] - ammonia_series).clip(lower=0.0)
-    distribution_key = residual / basic_chemicals_without_NH3_production_today / 1e3
+    distribution_key = residual / basic_chemicals_without_ammonia_Mt_per_year / 1e3
 
     calibrated = {
         "Ammonia": ammonia_series,
-        "HVC": HVC_production_today * 1e3 * distribution_key,
-        "Chlorine": chlorine_production_today * 1e3 * distribution_key,
-        "Methanol": methanol_production_today * 1e3 * distribution_key,
+        "HVC": hvc_Mt_per_year * 1e3 * distribution_key,
+        "Chlorine": chlorine_Mt_per_year * 1e3 * distribution_key,
+        "Methanol": methanol_Mt_per_year * 1e3 * distribution_key,
     }
 
     records = []
@@ -248,10 +248,10 @@ def aggregate_commodities(production: pd.DataFrame) -> pd.DataFrame:
 def prepare_current_production(
     countries,
     reference_year,
-    basic_chemicals_without_NH3_production_today,
-    HVC_production_today,
-    chlorine_production_today,
-    methanol_production_today,
+    basic_chemicals_without_ammonia_Mt_per_year,
+    hvc_Mt_per_year,
+    chlorine_Mt_per_year,
+    methanol_Mt_per_year,
     jrc_dir,
     eurostat_dir,
     ch_path,
@@ -274,10 +274,10 @@ def prepare_current_production(
         production,
         Path(ammonia_path),
         year,
-        basic_chemicals_without_NH3_production_today,
-        HVC_production_today,
-        chlorine_production_today,
-        methanol_production_today,
+        basic_chemicals_without_ammonia_Mt_per_year,
+        hvc_Mt_per_year,
+        chlorine_Mt_per_year,
+        methanol_Mt_per_year,
     )
     production["production"] = pd.to_numeric(
         production["production"], errors="coerce"
@@ -308,10 +308,10 @@ def main() -> None:
     prepare_current_production(
         source_countries,
         snakemake.params.reference_year,
-        snakemake.params.basic_chemicals_without_NH3_production_today,
-        snakemake.params.HVC_production_today,
-        snakemake.params.chlorine_production_today,
-        snakemake.params.methanol_production_today,
+        snakemake.params.basic_chemicals_without_ammonia_Mt_per_year,
+        snakemake.params.hvc_Mt_per_year,
+        snakemake.params.chlorine_Mt_per_year,
+        snakemake.params.methanol_Mt_per_year,
         snakemake.input.jrc_dir,
         snakemake.input.eurostat_dir,
         snakemake.input.ch_industrial_production,

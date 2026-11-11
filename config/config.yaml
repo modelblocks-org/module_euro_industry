@@ -11,18 +11,21 @@ scenarios:
 historical_calibration:
   reference_year: 2019
 
-  basic_chemicals_without_NH3_production_today: 69.0
-  HVC_production_today: 52.0
-  chlorine_production_today: 9.58
-  methanol_production_today: 1.5
+  production_Mt_per_year:
+    basic_chemicals_without_NH3: 69.0
+    HVC: 52.0
+    chlorine: 9.58
+    methanol: 1.5
 
-  MWh_NH3_per_tNH3: 5.166
-  MWh_H2_per_tNH3_electrolysis: 5.93
-  MWh_elec_per_tNH3_electrolysis: 0.2473
-  MWh_elec_per_tCl: 3.6
-  MWh_H2_per_tCl: -0.9372
-  MWh_elec_per_tMeOH: 0.167
-  MWh_CH4_per_tMeOH: 10.25
+  energy_density_MWh_per_t:
+    NH3: 5.166
+  energy_feedstock_MWh_per_t:
+    H2_per_NH3_electrolysis: 5.93
+    elec_per_NH3_electrolysis: 0.2473
+    elec_per_Cl: 3.6
+    H2_per_Cl: -0.9372
+    elec_per_MeOH: 0.167
+    CH4_per_MeOH: 10.25
 
   ammonia: true
 
