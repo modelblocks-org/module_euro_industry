@@ -413,13 +413,13 @@ def calibrate_basic_chemicals(
     demand: pd.DataFrame,
     production: pd.DataFrame,
     ammonia_as_carrier,
-    MWh_CH4_per_tMeOH,
-    MWh_elec_per_tCl,
-    MWh_H2_per_tCl,
-    MWh_elec_per_tMeOH,
-    MWh_elec_per_tNH3_electrolysis,
-    MWh_H2_per_tNH3_electrolysis,
-    MWh_NH3_per_tNH3,
+    methanol_methane_MWh_per_t,
+    chlorine_electricity_MWh_per_t,
+    chlorine_hydrogen_MWh_per_t,
+    methanol_electricity_MWh_per_t,
+    ammonia_electrolysis_electricity_MWh_per_t,
+    ammonia_electrolysis_hydrogen_MWh_per_t,
+    ammonia_energy_content_MWh_per_t,
     reference_year,
 ) -> pd.DataFrame:
     """Split JRC Basic chemicals while preserving FEC/UED process structure."""
@@ -450,13 +450,14 @@ def calibrate_basic_chemicals(
 
         deductions = {
             "ELEC": (
-                chlorine * MWh_elec_per_tCl
-                + methanol * MWh_elec_per_tMeOH
-                + ammonia * MWh_elec_per_tNH3_electrolysis
+                chlorine * chlorine_electricity_MWh_per_t
+                + methanol * methanol_electricity_MWh_per_t
+                + ammonia * ammonia_electrolysis_electricity_MWh_per_t
             ),
-            "NG_BIOGAS": methanol * MWh_CH4_per_tMeOH,
+            "NG_BIOGAS": methanol * methanol_methane_MWh_per_t,
             "HYDROGEN": (
-                chlorine * MWh_H2_per_tCl + ammonia * MWh_H2_per_tNH3_electrolysis
+                chlorine * chlorine_hydrogen_MWh_per_t
+                + ammonia * ammonia_electrolysis_hydrogen_MWh_per_t
             ),
         }
 
@@ -515,19 +516,24 @@ def calibrate_basic_chemicals(
                 )
             )
 
-        add("Chlorine", "ELEC", chlorine * MWh_elec_per_tCl)
-        add("Chlorine", "HYDROGEN", chlorine * MWh_H2_per_tCl)
-        add("Methanol", "ELEC", methanol * MWh_elec_per_tMeOH)
+        add("Chlorine", "ELEC", chlorine * chlorine_electricity_MWh_per_t)
+        add("Chlorine", "HYDROGEN", chlorine * chlorine_hydrogen_MWh_per_t)
+        add("Methanol", "ELEC", methanol * methanol_electricity_MWh_per_t)
         # Methanol natural-gas input is treated as feedstock/non-energy use.
-        add("Methanol", "NG_BIOGAS", methanol * MWh_CH4_per_tMeOH, "feedstock")
+        add("Methanol", "NG_BIOGAS", methanol * methanol_methane_MWh_per_t, "feedstock")
         if ammonia_as_carrier:
-            add("Ammonia", "AMMONIA", ammonia * MWh_NH3_per_tNH3, "feedstock")
+            add(
+                "Ammonia",
+                "AMMONIA",
+                ammonia * ammonia_energy_content_MWh_per_t,
+                "feedstock",
+            )
         else:
-            add("Ammonia", "ELEC", ammonia * MWh_elec_per_tNH3_electrolysis)
+            add("Ammonia", "ELEC", ammonia * ammonia_electrolysis_electricity_MWh_per_t)
             add(
                 "Ammonia",
                 "HYDROGEN",
-                ammonia * MWh_H2_per_tNH3_electrolysis,
+                ammonia * ammonia_electrolysis_hydrogen_MWh_per_t,
                 "feedstock",
             )
 
@@ -615,13 +621,13 @@ def prepare(
     reference_year,
     coke_oven_allocation,
     ammonia_as_carrier,
-    MWh_CH4_per_tMeOH,
-    MWh_elec_per_tCl,
-    MWh_H2_per_tCl,
-    MWh_elec_per_tMeOH,
-    MWh_elec_per_tNH3_electrolysis,
-    MWh_H2_per_tNH3_electrolysis,
-    MWh_NH3_per_tNH3,
+    methanol_methane_MWh_per_t,
+    chlorine_electricity_MWh_per_t,
+    chlorine_hydrogen_MWh_per_t,
+    methanol_electricity_MWh_per_t,
+    ammonia_electrolysis_electricity_MWh_per_t,
+    ammonia_electrolysis_hydrogen_MWh_per_t,
+    ammonia_energy_content_MWh_per_t,
     jrc_dir: str | Path,
     production_path: str | Path,
     coke_path: str | Path,
@@ -656,13 +662,13 @@ def prepare(
         demand,
         production,
         ammonia_as_carrier,
-        MWh_CH4_per_tMeOH,
-        MWh_elec_per_tCl,
-        MWh_H2_per_tCl,
-        MWh_elec_per_tMeOH,
-        MWh_elec_per_tNH3_electrolysis,
-        MWh_H2_per_tNH3_electrolysis,
-        MWh_NH3_per_tNH3,
+        methanol_methane_MWh_per_t,
+        chlorine_electricity_MWh_per_t,
+        chlorine_hydrogen_MWh_per_t,
+        methanol_electricity_MWh_per_t,
+        ammonia_electrolysis_electricity_MWh_per_t,
+        ammonia_electrolysis_hydrogen_MWh_per_t,
+        ammonia_energy_content_MWh_per_t,
         reference_year,
     )
     demand = add_coke_ovens(demand, Path(coke_path), year, float(coke_oven_allocation))
@@ -726,13 +732,13 @@ def main() -> None:
         reference_year=snakemake.params.reference_year,
         coke_oven_allocation=snakemake.params.coke_oven_allocation,
         ammonia_as_carrier=snakemake.params.ammonia,
-        MWh_CH4_per_tMeOH=snakemake.params.MWh_CH4_per_tMeOH,
-        MWh_elec_per_tCl=snakemake.params.MWh_elec_per_tCl,
-        MWh_H2_per_tCl=snakemake.params.MWh_H2_per_tCl,
-        MWh_elec_per_tMeOH=snakemake.params.MWh_elec_per_tMeOH,
-        MWh_elec_per_tNH3_electrolysis=snakemake.params.MWh_elec_per_tNH3_electrolysis,
-        MWh_H2_per_tNH3_electrolysis=snakemake.params.MWh_H2_per_tNH3_electrolysis,
-        MWh_NH3_per_tNH3=snakemake.params.MWh_NH3_per_tNH3,
+        methanol_methane_MWh_per_t=snakemake.params.methanol_methane_MWh_per_t,
+        chlorine_electricity_MWh_per_t=snakemake.params.chlorine_electricity_MWh_per_t,
+        chlorine_hydrogen_MWh_per_t=snakemake.params.chlorine_hydrogen_MWh_per_t,
+        methanol_electricity_MWh_per_t=snakemake.params.methanol_electricity_MWh_per_t,
+        ammonia_electrolysis_electricity_MWh_per_t=snakemake.params.ammonia_electrolysis_electricity_MWh_per_t,
+        ammonia_electrolysis_hydrogen_MWh_per_t=snakemake.params.ammonia_electrolysis_hydrogen_MWh_per_t,
+        ammonia_energy_content_MWh_per_t=snakemake.params.ammonia_energy_content_MWh_per_t,
         jrc_dir=snakemake.input.jrc_dir,
         production_path=snakemake.input.production,
         coke_path=snakemake.input.coke,

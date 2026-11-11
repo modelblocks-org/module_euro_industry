@@ -23,6 +23,7 @@ HISTORICAL_TECH = "HISTORICAL"
 
 
 def load_yaml(path: str | Path) -> dict:
+    """Load a YAML configuration from disk."""
     with open(path, encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
@@ -56,6 +57,7 @@ def _validate_shares(shares: dict[str, float], label: str, tol: float = 1e-6) ->
 def historical_route_shares(
     historical_production: pd.DataFrame, reference_year: int
 ) -> dict[tuple[str, str], dict[str, float]]:
+    """Calculate reference-year route shares for each country and commodity."""
     data = historical_production.loc[
         historical_production["year"].astype(int).eq(reference_year)
     ].copy()
@@ -439,6 +441,7 @@ def apply_process_transformations(
     processes: dict,
     reference_year: int,
 ) -> pd.DataFrame:
+    """Apply scenario technology shares to historical useful-energy demand."""
     out = existing_demand.copy()
 
     for tr in transformations:
@@ -511,8 +514,6 @@ def apply_process_transformations(
                 eff = float(definition["efficiency"])
                 # ``efficiency`` is a generic useful-energy/FEC conversion factor.
                 # For heat pumps it is a COP and can therefore exceed 1.
-                if not 0 < eff <= 10:
-                    raise ValueError(f"Invalid efficiency/COP for {tech}: {eff}")
                 carrier_defs = definition["carriers"]
                 carrier_shares = {
                     c: float(v["share"] if isinstance(v, dict) else v)
@@ -565,7 +566,7 @@ def apply_process_transformations(
 def build_existing_route_demand(
     route_production: pd.DataFrame, historical_intensity: pd.DataFrame
 ) -> pd.DataFrame:
-    new_route_pairs = set()
+    """Scale historical process intensities by projected route production."""
     # Existing routes are simply those present in historical intensity.
     existing_keys = historical_intensity[
         ["country", "commodity", "production_route"]
@@ -616,6 +617,7 @@ def build_new_route_demand(
     processes: dict,
     historical_intensity: pd.DataFrame,
 ) -> pd.DataFrame:
+    """Build new-route demand from process intensities and inherited use types."""
     frames = []
     for route_name, route_def in route_definitions.items():
         commodity = route_def["commodity"]
@@ -726,13 +728,16 @@ def transform_demand(
     historical_production_path: str | Path,
     historical_energy_path: str | Path,
     reference_year: int,
-    processes: dict,
-    route_definitions: dict,
+    technology_path: str | Path,
     scenario_path: str | Path,
     output_demand_path: str | Path,
     output_route_production_path: str | Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Calculate, save, and return demand and route production for a scenario."""
     reference_year = int(reference_year)
+    technologies = load_yaml(technology_path)
+    processes = technologies["processes"]
+    route_definitions = technologies["production_routes"]
     scenario = load_yaml(scenario_path)
     transformations = scenario["process_transformations"]
     route_shares = scenario["route_shares"]
@@ -814,13 +819,13 @@ def transform_demand(
 
 
 def main() -> None:
+    """Run the demand transformation using the Snakemake job configuration."""
     transform_demand(
         snakemake.input.projected_production,
         snakemake.input.historical_production,
         snakemake.input.historical_energy,
         snakemake.params.reference_year,
-        snakemake.params.processes,
-        snakemake.params.production_routes,
+        snakemake.input.technology_input,
         snakemake.input.projection_input,
         snakemake.output.demand,
         snakemake.output.route_production,
@@ -828,5 +833,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    sys.stderr = open(snakemake.log[0], "w", buffering=1)
+    sys.stdout = sys.stderr = open(snakemake.log[0], "w", buffering=1)
     main()

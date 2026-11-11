@@ -59,11 +59,6 @@ def _restrict_to_spatial_scope(
     Those countries are outside the spatial scope and are therefore omitted
     rather than assigned invented regions.
     """
-    if "country" not in df.columns:
-        raise ValueError("Input data must contain a 'country' column.")
-    if "country" not in distribution_keys.columns:
-        raise ValueError("Spatial distribution keys must contain a 'country' column.")
-
     spatial_countries = set(
         distribution_keys["country"].dropna().astype(str).str.upper().unique()
     )
@@ -71,18 +66,7 @@ def _restrict_to_spatial_scope(
     out = df.copy()
     out["country"] = out["country"].astype(str).str.upper()
 
-    present_countries = set(out["country"].dropna().unique())
-    omitted_countries = sorted(present_countries - spatial_countries)
-
-    if omitted_countries:
-        omitted_mask = ~out["country"].isin(spatial_countries)
-        n_omitted = int(omitted_mask.sum())
-        print(
-            "Spatial disaggregation: skipping "
-            f"{n_omitted} rows for countries not represented in the "
-            "user GeoParquet: " + ", ".join(omitted_countries)
-        )
-        out = out.loc[~omitted_mask].copy()
+    out = out.loc[out["country"].isin(spatial_countries)].copy()
 
     return out
 
@@ -91,19 +75,10 @@ def _filter_years(df: pd.DataFrame, years: list[int] | None) -> pd.DataFrame:
     """Restrict the spatial output to selected years before regional expansion."""
     if not years:
         return df
-    if "year" not in df.columns:
-        raise ValueError("A year filter was requested, but input has no 'year' column.")
 
     out = df.copy()
     out["year"] = pd.to_numeric(out["year"], errors="coerce")
-    available = set(out["year"].dropna().astype(int).unique())
     requested = {int(y) for y in years}
-    missing = sorted(requested - available)
-    if missing:
-        print(
-            "Spatial disaggregation: requested years not available in input: "
-            + ", ".join(map(str, missing))
-        )
 
     out = out.loc[out["year"].isin(sorted(requested))].copy()
     return out
@@ -154,11 +129,6 @@ def main() -> None:
 
     df = pd.read_parquet(snakemake.input.data)
     distribution_keys = pd.read_parquet(snakemake.input.distribution_keys)
-
-    if snakemake.params.value_column not in df.columns:
-        raise ValueError(
-            f"Value column '{snakemake.params.value_column}' not found in {snakemake.input.data}."
-        )
 
     out = disaggregate(
         df, distribution_keys, snakemake.params.value_column, years=years
