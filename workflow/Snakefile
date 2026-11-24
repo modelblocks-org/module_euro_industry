@@ -1,5 +1,5 @@
 import yaml
-from snakemake.utils import min_version
+from snakemake.utils import min_version, validate
 
 min_version("9.19")
 
@@ -11,6 +11,7 @@ min_version("9.19")
 pathvars:
     shapes="<resources>/user/{shapes}/shapes.parquet",
     projection_inputs="<resources>/user/projection_inputs",
+    technology_inputs="<resources>/user/technologies",
     population="<resources>/user/{shapes}/population.csv",
     user_key="<resources>/user/{shapes}/user_key.csv",
     historical_production="<results>/{shapes}/historical/production.parquet",
@@ -30,9 +31,8 @@ pathvars:
 configfile: workflow.source_path("../config/config.yaml")
 
 
-# FIXME: define a schema for the configuration file and other .yaml input files.
 # Validate the configuration using the schema file.
-# validate(config, workflow.source_path("internal/config.schema.yaml"))
+validate(config, workflow.source_path("internal/config.schema.yaml"))
 
 # Load internal settings separately so users cannot modify them.
 with open(workflow.source_path("internal/settings.yaml"), "r", encoding="utf-8") as f:
@@ -54,6 +54,7 @@ include: "rules/spatial.smk"
 # explicitly used as a script or input in a snakemake rule.
 # Imported Python helpers must also be available to remotely loaded scripts.
 workflow.source_path("scripts/_industry_schema.py")
+workflow.source_path("scripts/_schemas.py")
 workflow.source_path("scripts/_utils.py")
 
 

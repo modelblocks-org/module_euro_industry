@@ -125,8 +125,8 @@ def load_overrides(path: str | Path | None, reference_year: int) -> pd.DataFrame
         )
 
     df = df[columns].copy()
-    df["country"] = df["country"].astype(str).str.strip()
-    df["commodity"] = df["commodity"].astype(str).str.strip()
+    df["country"] = df["country"].astype("string").str.strip()
+    df["commodity"] = df["commodity"].astype("string").str.strip()
     df["year"] = pd.to_numeric(df["year"], errors="raise").astype(int)
     df["value"] = pd.to_numeric(df["value"], errors="raise").astype(float)
 

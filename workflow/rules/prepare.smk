@@ -14,6 +14,7 @@ rule prepare_shapes:
         "../envs/module.yaml"
     params:
         supported_countries=internal["calibration_countries"],
+        reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/prepare_shapes.py"
 
@@ -78,15 +79,8 @@ rule prepare_current_production:
         "../envs/module.yaml"
     params:
         reference_year=config["historical_calibration"]["reference_year"],
-        basic_chemicals_without_NH3_production_today=config["historical_calibration"][
-            "basic_chemicals_without_NH3_production_today"
-        ],
-        HVC_production_today=config["historical_calibration"]["HVC_production_today"],
-        chlorine_production_today=config["historical_calibration"][
-            "chlorine_production_today"
-        ],
-        methanol_production_today=config["historical_calibration"][
-            "methanol_production_today"
+        production_Mt_per_year=config["historical_calibration"][
+            "production_Mt_per_year"
         ],
     message:
         "Prepare route-preserving historical industrial production."
@@ -109,17 +103,12 @@ rule prepare_current_energy_demand:
         "../envs/module.yaml"
     params:
         reference_year=config["historical_calibration"]["reference_year"],
-        MWh_NH3_per_tNH3=config["historical_calibration"]["MWh_NH3_per_tNH3"],
-        MWh_H2_per_tNH3_electrolysis=config["historical_calibration"][
-            "MWh_H2_per_tNH3_electrolysis"
+        ammonia_energy_content_MWh_per_t=config["historical_calibration"]
+        .get("energy_density_MWh_per_t", {})
+        .get("NH3"),
+        energy_feedstock_MWh_per_t=config["historical_calibration"][
+            "energy_feedstock_MWh_per_t"
         ],
-        MWh_elec_per_tNH3_electrolysis=config["historical_calibration"][
-            "MWh_elec_per_tNH3_electrolysis"
-        ],
-        MWh_elec_per_tCl=config["historical_calibration"]["MWh_elec_per_tCl"],
-        MWh_H2_per_tCl=config["historical_calibration"]["MWh_H2_per_tCl"],
-        MWh_elec_per_tMeOH=config["historical_calibration"]["MWh_elec_per_tMeOH"],
-        MWh_CH4_per_tMeOH=config["historical_calibration"]["MWh_CH4_per_tMeOH"],
         ammonia=config["historical_calibration"]["ammonia"],
         coke_oven_allocation=config["historical_calibration"]["coke_oven_allocation"],
     message:

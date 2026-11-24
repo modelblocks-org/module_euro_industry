@@ -9,6 +9,9 @@ rule transform_industrial_demand:
         projection_input=lambda wildcards: (
             f"<projection_inputs>/{config['scenarios'][wildcards.scenario]['projection_input']}"
         ),
+        technology_input=lambda wildcards: (
+            f"<technology_inputs>/{config['scenarios'][wildcards.scenario]['technology_input']}"
+        ),
     output:
         demand="<national_industrial_energy_demand>",
         route_production="<national_route_production>",
@@ -17,8 +20,6 @@ rule transform_industrial_demand:
     conda:
         "../envs/module.yaml"
     params:
-        processes=config["technologies"]["processes"],
-        production_routes=config["technologies"]["production_routes"],
         reference_year=config["historical_calibration"]["reference_year"],
     script:
         "../scripts/transform_industrial_demand.py"
